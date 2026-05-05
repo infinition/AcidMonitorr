@@ -1,5 +1,11 @@
+<img width="120" height="120" alt="128x128@2x" src="https://github.com/user-attachments/assets/28ef22f6-0981-4047-aaf8-b56e571a83da" />
+
 # AcidMonitorr
+
 > Hybrid Desktop & Docker Media Monitor.
+
+<img width="842" height="622" alt="image" src="https://github.com/user-attachments/assets/21c61456-0036-4d07-99a6-b52a0b9aad3b" />
+
 
 ## ⚡ Quick Start (Desktop)
 - Build: `npm run tauri build`
