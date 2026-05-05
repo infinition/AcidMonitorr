@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AcidMonitorr | Command Center v3.0</title>
+    <!-- Error catcher - must be first -->
+    <script>
+        window.onerror = function(msg, url, line, col, error) {
+            document.title = 'ERROR: ' + msg;
+            console.error('GLOBAL ERROR:', msg, url, line, col, error);
+        };
+    </script>
+    <!-- All resources local - no CDN -->
+    <link rel="stylesheet" href="vendor/tailwind.css">
+    <link rel="stylesheet" href="vendor/fontawesome.min.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <script src="vendor/chart.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700&family=Inter:wght@300;400;600&display=swap');
+    </style>
+</head>
+
+<body class="h-screen overflow-hidden flex flex-col md:flex-row text-sm">
+
+    <!-- Mobile Header -->
+    <div class="md:hidden flex justify-between items-center p-4 glass-panel border-b border-gray-800 z-50">
+        <div class="font-display font-bold text-xl tracking-wider text-white">
+            ACID<span class="text-acid-green">MONITORR</span>
+        </div>
+        <button id="mobileMenuBtn" class="text-acid-green">
+            <i class="fas fa-bars text-xl"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="transform -translate-x-full md:translate-x-0 transition-transform duration-300 fixed md:relative z-40 w-64 h-full glass-panel flex flex-col border-r border-gray-800">
+        <div class="p-6 hidden md:block">
+            <div class="font-display font-bold text-3xl tracking-wider text-white neon-text">
+                ACID<span class="text-acid-green">MONITORR</span>
+            </div>
+            <div class="text-xs text-gray-500 mt-1 uppercase tracking-widest">
+                Command Center v3.0
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4 space-y-1" id="nav-container">
+            <a href="javascript:void(0)" data-action="show-section" data-param="dashboard" id="nav-dashboard" class="nav-item active flex items-center px-6 py-3 text-acid-green border-r-2 border-acid-green bg-white/5">
+                <i class="fas fa-chart-pie w-6"></i><span class="font-medium ml-3">Dashboard</span>
+            </a>
+            <a href="javascript:void(0)" data-action="show-section" data-param="plex-dash" id="nav-plex-dash" class="nav-item flex items-center px-6 py-3 text-gray-400 hover:text-white hover:bg-white/5 border-r-2 border-transparent transition-all">
+                <i class="fas fa-desktop w-6"></i><span class="font-medium ml-3">Plex Live</span>
+            </a>
+
+            <div class="px-6 pt-4 pb-2 text-xs font-bold text-gray-600 uppercase tracking-wider">Mediatheque</div>
+            <a href="javascript:void(0)" data-action="show-section" data-param="movies" id="nav-movies" class="nav-item flex items-center px-6 py-2 text-gray-400 hover:text-white hover:bg-white/5 border-r-2 border-transparent transition-all">
+                <i class="fas fa-film w-6"></i><span class="ml-3">Films (Radarr)</span>
+            </a>
+            <a href="javascript:void(0)" data-action="show-section" data-param="series" id="nav-series" class="nav-item flex items-center px-6 py-2 text-gray-400 hover:text-white hover:bg-white/5 border-r-2 border-transparent transition-all">
+                <i class="fas fa-tv w-6"></i><span class="ml-3">Series (Sonarr)</span>
+            </a>
+            <a href="javascript:void(0)" data-action="show-section" data-param="queue" id="nav-queue" class="nav-item flex items-center px-6 py-2 text-gray-400 hover:text-white hover:bg-white/5 border-r-2 border-transparent transition-all">
+                <i class="fas fa-tasks w-6"></i><span class="ml-3">Telechargements</span>
+            </a>
+
+            <div class="px-6 pt-4 pb-2 text-xs font-bold text-gray-600 uppercase tracking-wider">Systeme</div>
+            <a href="javascript:void(0)" data-action="show-section" data-param="indexers" id="nav-indexers" class="nav-item flex items-center px-6 py-2 text-gray-400 hover:text-white hover:bg-white/5 border-r-2 border-transparent transition-all">
+                <i class="fas fa-server w-6"></i><span class="ml-3">Indexeurs</span>
+            </a>
+            <a href="javascript:void(0)" data-action="show-section" data-param="calendar-section" id="nav-calendar-section" class="nav-item flex items-center px-6 py-2 text-gray-400 hover:text-white hover:bg-white/5 border-r-2 border-transparent transition-all">
+                <i class="fas fa-calendar-alt w-6"></i><span class="ml-3">Calendrier</span>
+            </a>
+            <a href="javascript:void(0)" data-action="show-section" data-param="history-section" id="nav-history-section" class="nav-item flex items-center px-6 py-2 text-gray-400 hover:text-white hover:bg-white/5 border-r-2 border-transparent transition-all">
+                <i class="fas fa-history w-6"></i><span class="ml-3">Historique</span>
+            </a>
+            <a href="javascript:void(0)" data-action="show-section" data-param="stats-section" id="nav-stats-section" class="nav-item flex items-center px-6 py-2 text-gray-400 hover:text-white hover:bg-white/5 border-r-2 border-transparent transition-all">
+                <i class="fas fa-chart-bar w-6"></i><span class="ml-3">Statistiques</span>
+            </a>
+
+            <!-- Services externes -->
+            <div class="px-6 pt-6 pb-2 text-xs font-bold text-gray-600 uppercase tracking-wider">Services</div>
+            <div id="nav-sonarr" class="hidden"><a href="javascript:void(0)" target="_blank" class="flex items-center px-6 py-2 text-gray-400 hover:text-acid-accent transition-colors service-link-sonarr"><i class="fas fa-tv w-6"></i><span class="ml-3">Sonarr</span></a></div>
+            <div id="nav-radarr" class="hidden"><a href="javascript:void(0)" target="_blank" class="flex items-center px-6 py-2 text-gray-400 hover:text-acid-accent transition-colors service-link-radarr"><i class="fas fa-film w-6"></i><span class="ml-3">Radarr</span></a></div>
+            <div id="nav-plex" class="hidden"><a href="javascript:void(0)" target="_blank" class="flex items-center px-6 py-2 text-gray-400 hover:text-acid-plex transition-colors service-link-plex"><i class="fas fa-play-circle w-6"></i><span class="ml-3">Plex</span></a></div>
+            <div id="nav-prowlarr" class="hidden"><a href="javascript:void(0)" target="_blank" class="flex items-center px-6 py-2 text-gray-400 hover:text-acid-danger transition-colors service-link-prowlarr"><i class="fas fa-fire w-6"></i><span class="ml-3">Prowlarr</span></a></div>
+            <div id="nav-jackett" class="hidden"><a href="javascript:void(0)" target="_blank" class="flex items-center px-6 py-2 text-gray-400 hover:text-acid-accent transition-colors service-link-jackett"><i class="fas fa-puzzle-piece w-6"></i><span class="ml-3">Jackett</span></a></div>
+            <div id="nav-flaresolverr" class="hidden"><a href="javascript:void(0)" target="_blank" class="flex items-center px-6 py-2 text-gray-400 hover:text-acid-accent transition-colors service-link-flaresolverr"><i class="fas fa-shield-alt w-6"></i><span class="ml-3">Flaresolverr</span></a></div>
+            <div id="nav-rdtclient" class="hidden"><a href="javascript:void(0)" target="_blank" class="flex items-center px-6 py-2 text-gray-400 hover:text-acid-rd transition-colors service-link-rdtclient"><i class="fas fa-server w-6"></i><span class="ml-3">RDT-Client</span></a></div>
+        </nav>
+
+        <div class="p-4 border-t border-gray-800 bg-black/20">
+            <button data-action="toggle-settings" class="w-full py-2 px-4 rounded border border-gray-700 hover:border-acid-green text-gray-400 hover:text-acid-green transition-all flex items-center justify-center gap-2 mb-2">
+                <i class="fas fa-sliders-h"></i> Configuration
+            </button>
+            <div class="flex items-center justify-between text-xs text-gray-500">
+                <span id="connection-status"><i class="fas fa-circle text-acid-green mr-1"></i> Connecte</span>
+                <span id="display-ip">192.168.1.75</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+        <!-- Top Bar -->
+        <header class="h-16 glass-panel border-b border-gray-800 flex items-center justify-between px-6 gap-6 relative" style="z-index:100">
+            <div class="flex-1 max-w-2xl relative group" id="search-wrapper">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-500 group-focus-within:text-acid-green transition-colors"></i>
+                </div>
+                <input type="text" id="mega-search" placeholder="Rechercher dans la bibliotheque... (Enter = ajouter nouveau)"
+                    class="bg-black/40 border border-gray-700 text-gray-300 text-sm rounded-lg focus:ring-1 focus:ring-acid-green focus:border-acid-green block w-full pl-10 p-2.5 placeholder-gray-600 transition-all focus:bg-black/60"
+                    autocomplete="off">
+                <div class="absolute right-3 top-2.5 text-xs text-gray-600 border border-gray-700 rounded px-1.5 hidden md:block">ENTER = ajouter</div>
+                <!-- Live search results dropdown -->
+                <div id="global-search-results" class="hidden absolute top-full left-0 right-0 mt-1 bg-[#111] border border-gray-700 rounded-lg shadow-2xl max-h-[400px] overflow-y-auto" style="z-index:9999"></div>
+            </div>
+            <div class="flex items-center gap-4">
+                <!-- Notifications -->
+                <div class="relative">
+                    <button id="notif-btn" class="text-gray-400 hover:text-acid-green relative">
+                        <i class="fas fa-bell"></i>
+                        <span id="notif-badge" class="hidden absolute -top-1 -right-1 h-3 w-3 bg-acid-danger rounded-full"></span>
+                    </button>
+                    <div id="notif-dropdown" class="hidden absolute right-0 top-10 w-80 bg-[#111] border border-gray-700 rounded-lg shadow-2xl z-50 overflow-hidden">
+                    </div>
+                </div>
+                <div class="hidden md:flex items-center bg-black/30 rounded-full px-3 py-1 border border-gray-800">
+                    <div class="h-2 w-2 rounded-full bg-acid-green animate-pulse mr-2"></div>
+                    <span class="text-xs font-mono text-acid-green">LIVE DATA</span>
+                </div>
+                <button data-action="refresh" class="text-gray-400 hover:text-acid-green transition-transform hover:rotate-180 duration-500" title="Force Refresh">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <div class="h-8 w-8 rounded-full bg-gray-800 flex items-center justify-center text-acid-green border border-acid-green/30 shadow-[0_0_10px_rgba(204,255,0,0.2)]">
+                    <i class="fas fa-user-astronaut"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scroll-smooth" id="main-scroll">
+
+            <!-- DASHBOARD -->
+            <div id="section-dashboard" class="page-section space-y-6">
+                <!-- Service Status Cards -->
+                <div id="cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                    <div id="card-plex" class="hidden glass-panel p-5 rounded-xl border-l-4 border-yellow-600 relative overflow-hidden group hover:bg-white/5 transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                            <div><h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Plex</h3><div class="text-2xl font-display font-bold text-white mt-1" id="plex-count">--</div></div>
+                            <div class="h-8 w-8 rounded bg-yellow-600/20 flex items-center justify-center text-yellow-500"><i class="fas fa-play-circle"></i></div>
+                        </div>
+                        <p class="text-xs text-gray-500">Flux en cours</p>
+                        <div class="absolute bottom-2 right-2"><span class="status-dot status-online" id="plex-status"></span></div>
+                    </div>
+                    <div id="card-sonarr" class="hidden glass-panel p-5 rounded-xl border-l-4 border-acid-accent relative overflow-hidden group hover:bg-white/5 transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                            <div><h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Sonarr</h3><div class="text-2xl font-display font-bold text-white mt-1" id="sonarr-count">--</div></div>
+                            <div class="h-8 w-8 rounded bg-acid-accent/20 flex items-center justify-center text-acid-accent"><i class="fas fa-tv"></i></div>
+                        </div>
+                        <p class="text-xs text-gray-500">Series Surveillees</p>
+                        <div class="absolute bottom-2 right-2"><span class="status-dot status-online" id="sonarr-status"></span></div>
+                    </div>
+                    <div id="card-radarr" class="hidden glass-panel p-5 rounded-xl border-l-4 border-yellow-500 relative overflow-hidden group hover:bg-white/5 transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                            <div><h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Radarr</h3><div class="text-2xl font-display font-bold text-white mt-1" id="radarr-count">--</div></div>
+                            <div class="h-8 w-8 rounded bg-yellow-500/20 flex items-center justify-center text-yellow-500"><i class="fas fa-film"></i></div>
+                        </div>
+                        <p class="text-xs text-gray-500">Films Surveilles</p>
+                        <div class="absolute bottom-2 right-2"><span class="status-dot status-online" id="radarr-status"></span></div>
+                    </div>
+                    <div id="card-prowlarr" class="hidden glass-panel p-5 rounded-xl border-l-4 border-red-500 relative overflow-hidden group hover:bg-white/5 transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                            <div><h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Prowlarr</h3><div class="text-2xl font-display font-bold text-white mt-1" id="prowlarr-count">--</div></div>
+                            <div class="h-8 w-8 rounded bg-red-500/20 flex items-center justify-center text-red-500"><i class="fas fa-fire"></i></div>
+                        </div>
+                        <p class="text-xs text-gray-500">Indexeurs</p>
+                        <div class="absolute bottom-2 right-2"><span class="status-dot status-online" id="prowlarr-status"></span></div>
+                    </div>
+                    <div id="card-rdtclient" class="hidden glass-panel p-5 rounded-xl border-l-4 border-purple-500 relative overflow-hidden group hover:bg-white/5 transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                            <div><h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">RDT-Client</h3><div class="text-2xl font-display font-bold text-white mt-1" id="rdtclient-count">--</div></div>
+                            <div class="h-8 w-8 rounded bg-purple-500/20 flex items-center justify-center text-purple-500"><i class="fas fa-server"></i></div>
+                        </div>
+                        <p class="text-xs text-gray-500">Torrents Actifs</p>
+                        <div class="absolute bottom-2 right-2"><span class="status-dot status-online" id="rdtclient-status"></span></div>
+                    </div>
+                </div>
+
+                <!-- KPI Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="glass-panel p-4 rounded-xl border-l-4 border-acid-accent hover:bg-white/5 transition-colors cursor-pointer" data-action="show-section" data-param="series">
+                        <div class="flex justify-between items-start">
+                            <div><div class="text-gray-500 text-xs uppercase font-bold tracking-wider">Series</div><div class="text-2xl font-display font-bold text-white" id="dash-sonarr-count">--</div></div>
+                            <i class="fas fa-tv text-2xl text-acid-accent/50"></i>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-400">Sonarr <span class="text-acid-green">Monitoring</span></div>
+                    </div>
+                    <div class="glass-panel p-4 rounded-xl border-l-4 border-yellow-500 hover:bg-white/5 transition-colors cursor-pointer" data-action="show-section" data-param="movies">
+                        <div class="flex justify-between items-start">
+                            <div><div class="text-gray-500 text-xs uppercase font-bold tracking-wider">Films</div><div class="text-2xl font-display font-bold text-white" id="dash-radarr-count">--</div></div>
+                            <i class="fas fa-film text-2xl text-yellow-500/50"></i>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-400">Radarr <span class="text-acid-green">Monitoring</span></div>
+                    </div>
+                    <div class="glass-panel p-4 rounded-xl border-l-4 border-green-500 hover:bg-white/5 transition-colors cursor-pointer" data-action="show-section" data-param="indexers">
+                        <div class="flex justify-between items-start">
+                            <div><div class="text-gray-500 text-xs uppercase font-bold tracking-wider">Indexers</div><div class="text-2xl font-display font-bold text-white" id="dash-jackett-count">--</div></div>
+                            <i class="fas fa-search text-2xl text-green-500/50"></i>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-400">Actifs <span class="text-acid-green">Online</span></div>
+                    </div>
+                    <div class="glass-panel p-4 rounded-xl border-l-4 border-acid-green hover:bg-white/5 transition-colors cursor-pointer" data-action="show-section" data-param="queue">
+                        <div class="flex justify-between items-start">
+                            <div><div class="text-gray-500 text-xs uppercase font-bold tracking-wider">Actifs</div><div class="text-2xl font-display font-bold text-white" id="dash-activity-count">0</div></div>
+                            <i class="fas fa-network-wired text-2xl text-acid-green/50"></i>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-400">Queue <span class="text-acid-accent">Processing</span></div>
+                    </div>
+                </div>
+
+                <!-- Activity -->
+                <div class="glass-panel rounded-xl p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-display font-bold text-lg text-white"><i class="fas fa-download mr-2 text-acid-green"></i>Activite Recente</h3>
+                        <button data-action="show-section" data-param="queue" class="text-xs text-acid-accent hover:underline">Voir tout</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead><tr class="text-gray-500 text-xs uppercase border-b border-gray-800"><th class="pb-2 pl-2">Client</th><th class="pb-2">Media</th><th class="pb-2">Statut</th><th class="pb-2 text-right">Progression</th></tr></thead>
+                            <tbody class="text-sm" id="dashboard-queue-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Disk space + Health + Flaresolverr row -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <!-- Disk Space (real data) -->
+                    <div class="glass-panel rounded-xl p-6">
+                        <h3 class="font-display font-bold text-lg text-white mb-4"><i class="fas fa-hdd mr-2 text-acid-accent"></i>Stockage</h3>
+                        <div id="disk-space-container">
+                            <div class="text-xs text-gray-500">Chargement...</div>
+                        </div>
+                    </div>
+
+                    <!-- System Health -->
+                    <div class="glass-panel rounded-xl p-6">
+                        <h3 class="font-display font-bold text-lg text-white mb-4"><i class="fas fa-heartbeat mr-2 text-acid-green"></i>Sante</h3>
+                        <div id="health-container" class="space-y-2">
+                            <div class="text-xs text-gray-500">Chargement...</div>
+                        </div>
+                    </div>
+
+                    <!-- Flaresolverr -->
+                    <div id="card-flaresolverr" class="hidden glass-panel rounded-xl p-6 border border-gray-800">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-display font-bold text-lg text-white">Flaresolverr</h3>
+                            <span class="status-dot status-online" id="flaresolverr-status"></span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-4">Protection Cloudflare Solver</p>
+                        <div class="bg-black/40 rounded p-3 font-mono text-xs text-green-400 border border-gray-800">
+                            &gt; Status: <span id="flare-status-text">Checking...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MOVIES -->
+            <div id="section-movies" class="page-section hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-display font-bold text-2xl text-white">Films <span class="text-yellow-500">(Radarr)</span></h2>
+                    <div class="flex gap-3">
+                        <div class="flex items-center bg-black/40 rounded-lg p-1 border border-gray-700">
+                            <button data-action="grid-zoom" data-param="movies" data-param2="-1" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white"><i class="fas fa-minus"></i></button>
+                            <span class="text-xs text-gray-500 font-mono px-2">ZOOM</span>
+                            <button data-action="grid-zoom" data-param="movies" data-param2="1" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <button data-action="open-add-modal" data-param="radarr" class="bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 rounded font-bold text-xs uppercase tracking-wider transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Ajouter Film
+                        </button>
+                    </div>
+                </div>
+                <div class="flex gap-2 overflow-x-auto pb-2">
+                    <button data-action="filter-library" data-param="movies" data-param2="all" class="px-4 py-1.5 rounded-full bg-white/10 text-white text-xs border border-white/10 hover:border-yellow-500 transition-colors whitespace-nowrap">Tout</button>
+                    <button data-action="filter-library" data-param="movies" data-param2="monitored" class="px-4 py-1.5 rounded-full bg-black/40 text-gray-400 text-xs border border-gray-800 hover:border-yellow-500 transition-colors whitespace-nowrap">Surveilles</button>
+                    <button data-action="filter-library" data-param="movies" data-param2="missing" class="px-4 py-1.5 rounded-full bg-black/40 text-gray-400 text-xs border border-gray-800 hover:border-red-500 transition-colors whitespace-nowrap">Manquants</button>
+                    <button data-action="filter-library" data-param="movies" data-param2="downloaded" class="px-4 py-1.5 rounded-full bg-black/40 text-gray-400 text-xs border border-gray-800 hover:border-green-500 transition-colors whitespace-nowrap">Telecharges</button>
+                    <div class="flex-1"></div>
+                    <select data-on-change="sort-library" data-param="movies" class="bg-black/40 text-gray-400 text-xs border border-gray-800 rounded px-3 py-1 focus:border-yellow-500 outline-none">
+                        <option value="added">Ajoute (Recent)</option><option value="title">Titre (A-Z)</option><option value="year">Annee</option>
+                    </select>
+                </div>
+                <div id="movies-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <div class="col-span-full text-center py-20 text-gray-600"><i class="fas fa-film text-4xl mb-4 opacity-20"></i><p>Chargement...</p></div>
+                </div>
+            </div>
+
+            <!-- SERIES -->
+            <div id="section-series" class="page-section hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-display font-bold text-2xl text-white">Series <span class="text-acid-accent">(Sonarr)</span></h2>
+                    <div class="flex gap-3">
+                        <div class="flex items-center bg-black/40 rounded-lg p-1 border border-gray-700">
+                            <button data-action="grid-zoom" data-param="series" data-param2="-1" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white"><i class="fas fa-minus"></i></button>
+                            <span class="text-xs text-gray-500 font-mono px-2">ZOOM</span>
+                            <button data-action="grid-zoom" data-param="series" data-param2="1" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <button data-action="open-add-modal" data-param="sonarr" class="bg-acid-accent hover:bg-cyan-400 text-black px-4 py-2 rounded font-bold text-xs uppercase tracking-wider transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Ajouter Serie
+                        </button>
+                    </div>
+                </div>
+                <div class="flex gap-2 overflow-x-auto pb-2">
+                    <button data-action="filter-library" data-param="series" data-param2="all" class="px-4 py-1.5 rounded-full bg-white/10 text-white text-xs border border-white/10 hover:border-acid-accent transition-colors whitespace-nowrap">Tout</button>
+                    <button data-action="filter-library" data-param="series" data-param2="monitored" class="px-4 py-1.5 rounded-full bg-black/40 text-gray-400 text-xs border border-gray-800 hover:border-acid-accent transition-colors whitespace-nowrap">Surveillees</button>
+                    <button data-action="filter-library" data-param="series" data-param2="ended" class="px-4 py-1.5 rounded-full bg-black/40 text-gray-400 text-xs border border-gray-800 hover:border-red-500 transition-colors whitespace-nowrap">Terminees</button>
+                    <button data-action="filter-library" data-param="series" data-param2="continuing" class="px-4 py-1.5 rounded-full bg-black/40 text-gray-400 text-xs border border-gray-800 hover:border-green-500 transition-colors whitespace-nowrap">En cours</button>
+                    <div class="flex-1"></div>
+                    <select data-on-change="sort-library" data-param="series" class="bg-black/40 text-gray-400 text-xs border border-gray-800 rounded px-3 py-1 focus:border-acid-accent outline-none">
+                        <option value="added">Ajoute (Recent)</option><option value="title">Titre (A-Z)</option><option value="year">Annee</option>
+                    </select>
+                </div>
+                <div id="series-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <div class="col-span-full text-center py-20 text-gray-600"><i class="fas fa-tv text-4xl mb-4 opacity-20"></i><p>Chargement...</p></div>
+                </div>
+            </div>
+
+            <!-- PLEX LIVE -->
+            <div id="section-plex-dash" class="page-section hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-display font-bold text-2xl text-white">Plex <span class="text-yellow-500">Live</span></h2>
+                    <div class="text-xs text-gray-500"><span id="plex-sessions-count" class="text-white font-bold">0</span> session(s) active(s)</div>
+                </div>
+
+                <!-- Unified Search: Plex library + Discover new content -->
+                <div class="glass-panel rounded-xl p-4">
+                    <div class="flex gap-3">
+                        <div class="flex-1 relative">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-500"></i>
+                            <input type="text" id="plex-search-input" placeholder="Rechercher un film ou serie (Plex + TMDb/TVDb)..."
+                                class="w-full bg-black/40 border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-white text-sm focus:border-acid-plex outline-none">
+                        </div>
+                        <button data-action="plex-search-go" class="bg-acid-plex text-black px-6 py-2 rounded-lg font-bold text-xs uppercase hover:bg-yellow-400 transition-colors">
+                            <i class="fas fa-search mr-1"></i>Rechercher
+                        </button>
+                    </div>
+                    <!-- Search mode tabs -->
+                    <div class="flex gap-2 mt-3">
+                        <button data-action="plex-search-mode" data-param="all" class="plex-tab-active px-3 py-1 rounded text-xs font-bold bg-acid-plex/20 text-acid-plex border border-acid-plex/30">Tout</button>
+                        <button data-action="plex-search-mode" data-param="plex" class="px-3 py-1 rounded text-xs font-bold bg-gray-800 text-gray-400 border border-gray-700">Ma bibliotheque Plex</button>
+                        <button data-action="plex-search-mode" data-param="discover" class="px-3 py-1 rounded text-xs font-bold bg-gray-800 text-gray-400 border border-gray-700">Decouvrir (TMDb)</button>
+                    </div>
+                    <div id="plex-search-results" class="mt-4"></div>
+                </div>
+
+                <!-- PlexSync / ImportList buttons -->
+                <div class="flex gap-3">
+                    <button data-action="import-list-sync" data-param="sonarr" class="glass-panel px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-white/5 transition-colors border border-gray-800 flex-1">
+                        <i class="fas fa-sync text-acid-accent text-lg"></i>
+                        <div>
+                            <div class="text-white text-xs font-bold">Sync Listes Sonarr</div>
+                            <div class="text-gray-500 text-[10px]">Importer la watchlist Plex dans Sonarr</div>
+                        </div>
+                    </button>
+                    <button data-action="import-list-sync" data-param="radarr" class="glass-panel px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-white/5 transition-colors border border-gray-800 flex-1">
+                        <i class="fas fa-sync text-yellow-500 text-lg"></i>
+                        <div>
+                            <div class="text-white text-xs font-bold">Sync Listes Radarr</div>
+                            <div class="text-gray-500 text-[10px]">Importer la watchlist Plex dans Radarr</div>
+                        </div>
+                    </button>
+                </div>
+                <div id="plex-sessions-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 plex-grid p-4 rounded-xl border border-gray-800 min-h-[200px]">
+                    <div class="col-span-full text-center py-10 text-gray-600"><i class="fas fa-play-circle text-4xl mb-4 opacity-20"></i><p>Aucune lecture en cours.</p></div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+                    <div class="lg:col-span-2">
+                        <h3 class="font-display font-bold text-lg text-white mb-4">Recemment Ajoute</h3>
+                        <div id="plex-recent-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-display font-bold text-lg text-white"><i class="fas fa-bookmark mr-2 text-acid-plex"></i>Watchlist</h3>
+                            <button data-action="plex-clear-watchlist" class="text-[10px] bg-red-500/10 text-red-400 px-3 py-1 rounded hover:bg-red-500/20 border border-red-500/30 uppercase font-bold">
+                                <i class="fas fa-trash mr-1"></i>Vider tout
+                            </button>
+                        </div>
+                        <div class="glass-panel rounded-xl p-3 max-h-[400px] overflow-y-auto" id="plex-watchlist-container">
+                            <div class="text-xs text-gray-500 text-center py-4">Chargement...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUEUE -->
+            <div id="section-queue" class="page-section hidden space-y-6">
+                <h2 class="font-display font-bold text-2xl text-white">File d'Attente <span class="text-acid-green">Globale</span></h2>
+                <div class="glass-panel rounded-xl overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-black/40 text-gray-400 text-xs uppercase font-bold">
+                            <tr><th class="p-4">Client</th><th class="p-4">Contenu</th><th class="p-4">Qualite</th><th class="p-4">Taille</th><th class="p-4">Temps Restant</th><th class="p-4">Statut</th><th class="p-4 text-right">Actions</th></tr>
+                        </thead>
+                        <tbody id="full-queue-list" class="divide-y divide-gray-800 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- INDEXERS -->
+            <div id="section-indexers" class="page-section hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-display font-bold text-2xl text-white">Indexeurs <span class="text-acid-green">Actifs</span></h2>
+                    <button data-action="refresh" class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded text-xs font-bold uppercase tracking-wider transition-colors">Tester Tout</button>
+                </div>
+                <div id="indexers-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="col-span-full text-center py-10 text-gray-600"><p>Aucun indexeur detecte.</p></div>
+                </div>
+            </div>
+
+            <!-- CALENDAR -->
+            <div id="section-calendar-section" class="page-section hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-display font-bold text-2xl text-white">Calendrier <span class="text-acid-accent">des Sorties</span></h2>
+                    <div class="flex items-center gap-4">
+                        <button data-action="change-month" data-param="-1" class="text-gray-400 hover:text-white p-2"><i class="fas fa-chevron-left"></i></button>
+                        <span id="calendar-month-display" class="text-white font-display font-bold text-lg"></span>
+                        <button data-action="change-month" data-param="1" class="text-gray-400 hover:text-white p-2"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1 bg-gray-900 rounded-xl overflow-hidden border border-gray-800"></div>
+            </div>
+
+            <!-- HISTORY -->
+            <div id="section-history-section" class="page-section hidden space-y-6">
+                <h2 class="font-display font-bold text-2xl text-white">Historique <span class="text-acid-accent">des Activites</span></h2>
+                <div class="glass-panel rounded-xl overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-black/40 text-gray-400 text-xs uppercase font-bold">
+                            <tr><th class="p-4">Date</th><th class="p-4">Titre</th><th class="p-4">Qualite</th><th class="p-4">Indexeur</th><th class="p-4">Action</th></tr>
+                        </thead>
+                        <tbody id="history-list" class="divide-y divide-gray-800 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- STATS -->
+            <div id="section-stats-section" class="page-section hidden space-y-6">
+                <h2 class="font-display font-bold text-2xl text-white">Statistiques <span class="text-acid-green">Hebdomadaires</span></h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="glass-panel rounded-xl p-6">
+                        <h3 class="font-bold text-white mb-4">Activite (7 jours)</h3>
+                        <div class="h-64"><canvas id="activity-chart"></canvas></div>
+                    </div>
+                    <div class="glass-panel rounded-xl p-6">
+                        <h3 class="font-bold text-white mb-4">Top Indexeurs</h3>
+                        <div class="h-64"><canvas id="indexer-chart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" data-action="close-modal" data-param="settings-modal"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-[#111] border border-gray-800 rounded-xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-gray-800 flex justify-between items-center bg-black/20">
+                <h2 class="font-display font-bold text-xl text-white">Configuration</h2>
+                <button data-action="close-modal" data-param="settings-modal" class="text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-6">
+                <!-- Connection -->
+                <div class="space-y-4">
+                    <h3 class="text-xs font-bold text-acid-green uppercase tracking-wider">Connexion</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">IP Serveur</label>
+                            <input type="text" id="server-ip" value="192.168.1.75" class="w-full bg-black/40 border border-gray-700 rounded p-2 text-white text-sm focus:border-acid-green outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Intervalle Refresh (sec)</label>
+                            <input type="number" id="refresh-interval" value="5" min="1" max="60" class="w-full bg-black/40 border border-gray-700 rounded p-2 text-white text-sm focus:border-acid-green outline-none">
+                        </div>
+                    </div>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="demo-mode-toggle" class="form-checkbox text-acid-green rounded bg-gray-800 border-gray-700">
+                        <span class="text-sm text-gray-300">Mode Demo (Donnees fictives)</span>
+                    </label>
+                </div>
+
+                <!-- Services -->
+                <div class="space-y-4">
+                    <h3 class="text-xs font-bold text-acid-green uppercase tracking-wider">Services & API Keys</h3>
+                    <div class="space-y-3">
+                        <!-- Sonarr -->
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="enable-sonarr" checked class="text-acid-green bg-gray-800 border-gray-700 rounded">
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-400">Sonarr API Key</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="sonarr-key" placeholder="API Key..." class="flex-1 bg-black/40 border border-gray-700 rounded p-2 text-white text-xs font-mono focus:border-acid-accent outline-none">
+                                    <input type="number" id="sonarr-port" value="8989" class="w-20 bg-black/40 border border-gray-700 rounded p-2 text-white text-xs font-mono focus:border-acid-accent outline-none" placeholder="Port">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Radarr -->
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="enable-radarr" checked class="text-acid-green bg-gray-800 border-gray-700 rounded">
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-400">Radarr API Key</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="radarr-key" placeholder="API Key..." class="flex-1 bg-black/40 border border-gray-700 rounded p-2 text-white text-xs font-mono focus:border-yellow-500 outline-none">
+                                    <input type="number" id="radarr-port" value="8310" class="w-20 bg-black/40 border border-gray-700 rounded p-2 text-white text-xs font-mono focus:border-yellow-500 outline-none" placeholder="Port">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Jackett -->
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="enable-jackett" class="text-acid-green bg-gray-800 border-gray-700 rounded">
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-400">Jackett API Key</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="jackett-key" placeholder="API Key..." class="flex-1 bg-black/40 border border-gray-700 rounded p-2 text-white text-xs font-mono focus:border-green-500 outline-none">
+                                    <input type="number" id="jackett-port" value="9117" class="w-20 bg-black/40 border border-gray-700 rounded p-2 text-white text-xs font-mono focus:border-green-500 outline-none" placeholder="Port">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Prowlarr -->
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="enable-prowlarr" class="text-acid-green bg-gray-800 border-gray-700 rounded">
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-400">Prowlarr API Key</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="prowlarr-key" placeholder="API Key..." class="flex-1 bg-black/40 border border-gray-700 rounded p-2 text-white text-xs font-mono focus:border-red-500 outline-none">
+                                    <input type="number" id="prowlarr-port" value="9696" class="w-20 bg-black/40 border border-gray-700 rounded p-2 text-white text-xs font-mono focus:border-red-500 outline-none" placeholder="Port">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Plex -->
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="enable-plex" class="text-acid-green bg-gray-800 border-gray-700 rounded">
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-400">Plex Token</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="plex-token" placeholder="X-Plex-Token..." class="flex-1 bg-black/40 border border-gray-700 rounded p-2 text-white text-xs font-mono focus:border-yellow-600 outline-none">
+                                    <input type="number" id="plex-port" value="32400" class="w-20 bg-black/40 border border-gray-700 rounded p-2 text-white text-xs font-mono focus:border-yellow-600 outline-none" placeholder="Port">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Flaresolverr -->
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="enable-flaresolverr" class="text-acid-green bg-gray-800 border-gray-700 rounded">
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-400">Flaresolverr (pas de cle)</label>
+                                <input type="number" id="flaresolverr-port" value="8191" class="w-20 bg-black/40 border border-gray-700 rounded p-2 text-white text-xs font-mono outline-none" placeholder="Port">
+                            </div>
+                        </div>
+                        <!-- RDT-Client -->
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="enable-rdtclient" class="text-acid-green bg-gray-800 border-gray-700 rounded">
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-400">RDT-Client (pas de cle)</label>
+                                <input type="number" id="rdtclient-port" value="6500" class="w-20 bg-black/40 border border-gray-700 rounded p-2 text-white text-xs font-mono outline-none" placeholder="Port">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 border-t border-gray-800 bg-black/20 flex justify-end">
+                <button data-action="save-config" class="bg-acid-green hover:bg-white text-black font-bold py-2 px-6 rounded transition-colors">
+                    Sauvegarder
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Content Modal -->
+    <div id="add-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-md" data-action="close-modal" data-param="add-modal"></div>
+        <div class="absolute top-10 left-1/2 transform -translate-x-1/2 w-full max-w-4xl bg-[#111] border border-gray-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-black/40">
+                <h2 class="font-display font-bold text-xl text-white" id="add-modal-title">Ajouter Contenu</h2>
+                <button data-action="close-modal" data-param="add-modal" class="text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-4 border-b border-gray-800 bg-black/20">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-4 top-3.5 text-gray-500"></i>
+                    <input type="text" id="add-search-input" placeholder="Titre du film ou de la serie..."
+                        class="w-full bg-black/50 border border-gray-700 rounded-lg py-3 pl-12 pr-4 text-white focus:border-acid-green outline-none"
+                        >
+                    <button data-action="perform-lookup" class="absolute right-2 top-2 bg-gray-800 hover:bg-gray-700 text-white px-4 py-1.5 rounded text-xs font-bold uppercase">Rechercher</button>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 bg-[#0a0a0a]">
+                <div id="add-results" class="grid grid-cols-1 gap-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Media Detail Modal -->
+    <div id="detail-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-md" data-action="close-modal" data-param="detail-modal"></div>
+        <div class="absolute top-5 left-1/2 transform -translate-x-1/2 w-full max-w-4xl bg-[#111] border border-gray-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-black/40">
+                <h2 class="font-display font-bold text-xl text-white" id="detail-modal-title">Detail</h2>
+                <button data-action="close-modal" data-param="detail-modal" class="text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto bg-[#0a0a0a]" id="detail-modal-content">
+                <div class="flex items-center justify-center py-20 text-gray-500">
+                    <div class="loader h-8 w-8 border-4 border-gray-600"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Search Modal -->
+    <div id="search-modal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-md" data-action="close-modal" data-param="search-modal"></div>
+        <div class="absolute top-5 left-1/2 transform -translate-x-1/2 w-full max-w-5xl bg-[#111] border border-gray-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-black/40">
+                <h2 class="font-display font-bold text-xl text-white" id="search-modal-title">Recherche Interactive</h2>
+                <button data-action="close-modal" data-param="search-modal" class="text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto bg-[#0a0a0a] p-4" id="search-modal-content">
+                <div class="flex items-center justify-center py-20 text-gray-500">
+                    <div class="loader h-8 w-8 border-4 border-gray-600"></div>
+                    <span class="ml-4">Recherche en cours sur les indexeurs...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Dialog (custom) -->
+    <div id="confirm-dialog" class="fixed inset-0 z-[70] hidden">
+        <div class="absolute inset-0 bg-black/80"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-[#111] border border-gray-800 rounded-xl shadow-2xl p-6">
+            <h3 class="font-display font-bold text-lg text-white mb-2" id="confirm-title">Confirmation</h3>
+            <p class="text-sm text-gray-400 mb-6" id="confirm-message"></p>
+            <div class="flex gap-3 justify-end">
+                <button data-action="close-modal" data-param="confirm-dialog" class="bg-gray-800 text-white px-4 py-2 rounded text-xs font-bold uppercase hover:bg-gray-700">Annuler</button>
+                <button id="confirm-ok-btn" class="bg-acid-danger text-white px-4 py-2 rounded text-xs font-bold uppercase hover:bg-red-600">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Scripts (order matters: utils -> config -> ui -> api -> others -> main) -->
+    <script src="js/utils.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/calendar.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/stats.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

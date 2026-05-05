@@ -1,0 +1,12 @@
+services:
+  acidmonitorr:
+    image: ghcr.io/infinition/acidmonitorr:latest
+    container_name: acidmonitorr
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - /volume1/docker/acidmonitorr/data:/app/data
+    environment:
+      - ACID_SERVER=1
+      - ACID_CONFIG_DIR=/app/data

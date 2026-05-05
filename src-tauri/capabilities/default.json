@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicknisi/tauri-v2/main/.schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Default capabilities for AcidMonitorr",
+  "windows": ["*"],
+  "permissions": [
+    "core:default",
+    "core:window:default",
+    "core:window:allow-close",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-set-focus",
+    "shell:allow-open"
+  ]
+}

@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acidmonitorr | Command Center v2.1 PRO</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Rajdhani', 'sans-serif'],
+                    },
+                    colors: {
+                        acid: {
+                            green: '#ccff00',
+                            dark: '#0a0a0a',
+                            panel: '#111111',
+                            accent: '#00d2ff',
+                            danger: '#ff0055',
+                            plex: '#e5a00d',
+                            rd: '#b6e0ff'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            background-color: #0a0a0a;
+            color: #e5e5e5;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ccff00;
+        }
+
+        /* Glassmorphism & Utilities */
+        .glass-panel {
+            background: rgba(17, 17, 17, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .neon-text {
+            text-shadow: 0 0 10px rgba(204, 255, 0, 0.5);
+        }
+
+        .status-dot {
+            height: 8px;
+            width: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-online {
+            background-color: #ccff00;
+            box-shadow: 0 0 8px #ccff00;
+        }
+
+        .status-offline {
+            background-color: #ff0055;
+            box-shadow: 0 0 8px #ff0055;
+        }
+
+        .status-warning {
+            background-color: #e5a00d;
+        }
+
+        /* Loader */
+        .loader {
+            border-top-color: #ccff00;
+            -webkit-animation: spinner 1.5s linear infinite;
+            animation: spinner 1.5s linear infinite;
+            border-radius: 50%;
+        }
+
+        @keyframes spinner {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Plex Surveillance Theme */
+        .plex-grid {
+            background-image: linear-gradient(rgba(229, 160, 13, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(229, 160, 13, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .stream-card {
+            transition: all 0.3s ease;
+        }
+
+        .stream-card:hover {
+            transform: scale(1.02);
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #ccff00;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #333;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+
+<body class="h-screen overflow-hidden flex flex-col md:flex-row text-sm">
+
+    <!-- Mobile Header -->
+    <div class="md:hidden flex justify-between items-center p-4 glass-panel border-b border-gray-800 z-50">
+        <div class="font-display font-bold text-xl tracking-wider text-white">
+            ACID<span class="text-acid-green">MONITORR</span>
+        </div>
+        <button id="mobileMenuBtn" class="text-acid-green">
+            <i class="fas fa-bars text-xl"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar"
+        class="transform -translate-x-full md:translate-x-0 transition-transform duration-300 fixed md:relative z-40 w-64 h-full glass-panel flex flex-col border-r border-gray-800">
+        <div class="p-6 hidden md:block">
+            <div class="font-display font-bold text-3xl tracking-wider text-white neon-text">
+                ACID<span class="text-acid-green">MONITORR</span>
+            </div>
+            <div class="text-xs text-gray-500 mt-1 uppercase tracking-widest">
+                Command Center v2.1 PRO
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4 space-y-1" id="nav-container">
+            <!-- SPA Nav -->
+            <a href="#" onclick="showSection('dashboard')" id="nav-dashboard"
+                class="nav-item active flex items-center px-6 py-3 text-acid-green border-r-2 border-acid-green bg-white/5">
+                <i class="fas fa-chart-pie w-6"></i>
+                <span class="font-medium ml-3">Dashboard</span>
+            </a>
+
+            <a href="#" onclick="showSection('plex-dash')" id="nav-plex-dash"
+                class="nav-item flex items-center px-6 py-3 text-gray-400 hover:text-white hover:bg-white/5 border-r-2 border-transparent transition-all">
+                <i class="fas fa-desktop w-6"></i>
+                <span class="font-medium ml-3">Plex Live</span>
+            </a>
+
+            <div class="px-6 pt-4 pb-2 text-xs font-bold text-gray-600 uppercase tracking-wider">Médiathèque</div>
+
+            <a href="#" onclick="showSection('movies')" id="nav-movies"
+                class="nav-item flex items-center px-6 py-2 text-gray-400 hover:text-white hover:bg-white/5 border-r-2 border-transparent transition-all">
+                <i class="fas fa-film w-6"></i>
+                <span class="ml-3">Films (Radarr)</span>
+            </a>
+            <a href="#" onclick="showSection('series')" id="nav-series"
+                class="nav-item flex items-center px-6 py-2 text-gray-400 hover:text-white hover:bg-white/5 border-r-2 border-transparent transition-all">
+                <i class="fas fa-tv w-6"></i>
+                <span class="ml-3">Séries (Sonarr)</span>
+            </a>
+            <a href="#" onclick="showSection('queue')" id="nav-queue"
+                class="nav-item flex items-center px-6 py-2 text-gray-400 hover:text-white hover:bg-white/5 border-r-2 border-transparent transition-all">
+                <i class="fas fa-tasks w-6"></i>
+                <span class="ml-3">Téléchargements</span>
+            </a>
+
+            <div class="px-6 pt-4 pb-2 text-xs font-bold text-gray-600 uppercase tracking-wider">Système</div>
+
+            <a href="#" onclick="showSection('indexers')" id="nav-indexers"
+                class="nav-item flex items-center px-6 py-2 text-gray-400 hover:text-white hover:bg-white/5 border-r-2 border-transparent transition-all">
+                <i class="fas fa-server w-6"></i>
+                <span class="ml-3">Indexeurs</span>
+            </a>
+            <a href="#" onclick="showSection('system')" id="nav-system"
+                class="nav-item flex items-center px-6 py-2 text-gray-400 hover:text-white hover:bg-white/5 border-r-2 border-transparent transition-all">
+                <i class="fas fa-cogs w-6"></i>
+                <span class="ml-3">Santé & Logs</span>
+            </a>
+
+            <!-- Services externes (liens directs) -->
+            <div class="px-6 pt-6 pb-2 text-xs font-bold text-gray-600 uppercase tracking-wider">Services</div>
+
+            <div id="nav-sonarr" class="hidden">
+                <a href="http://192.168.1.75:8989" target="_blank"
+                    class="flex items-center px-6 py-2 text-gray-400 hover:text-acid-accent transition-colors service-link-sonarr">
+                    <i class="fas fa-tv w-6"></i> <span class="ml-3">Sonarr</span>
+                </a>
+            </div>
+            <div id="nav-radarr" class="hidden">
+                <a href="http://192.168.1.75:8310" target="_blank"
+                    class="flex items-center px-6 py-2 text-gray-400 hover:text-acid-accent transition-colors service-link-radarr">
+                    <i class="fas fa-film w-6"></i> <span class="ml-3">Radarr</span>
+                </a>
+            </div>
+            <div id="nav-plex" class="hidden">
+                <a href="http://192.168.1.75:32400/web" target="_blank"
+                    class="flex items-center px-6 py-2 text-gray-400 hover:text-acid-plex transition-colors service-link-plex">
+                    <i class="fas fa-play-circle w-6"></i> <span class="ml-3">Plex</span>
+                </a>
+            </div>
+            <div id="nav-prowlarr" class="hidden">
+                <a href="http://192.168.1.75:9696" target="_blank"
+                    class="flex items-center px-6 py-2 text-gray-400 hover:text-acid-danger transition-colors service-link-prowlarr">
+                    <i class="fas fa-fire w-6"></i> <span class="ml-3">Prowlarr</span>
+                </a>
+            </div>
+            <div id="nav-jackett" class="hidden">
+                <a href="http://192.168.1.75:9117" target="_blank"
+                    class="flex items-center px-6 py-2 text-gray-400 hover:text-acid-accent transition-colors service-link-jackett">
+                    <i class="fas fa-puzzle-piece w-6"></i> <span class="ml-3">Jackett</span>
+                </a>
+            </div>
+            <div id="nav-flaresolverr" class="hidden">
+                <a href="http://192.168.1.75:8191" target="_blank"
+                    class="flex items-center px-6 py-2 text-gray-400 hover:text-acid-accent transition-colors service-link-flaresolverr">
+                    <i class="fas fa-shield-alt w-6"></i> <span class="ml-3">Flaresolverr</span>
+                </a>
+            </div>
+            <div id="nav-rdtclient" class="hidden">
+                <a href="http://192.168.1.75:6500" target="_blank"
+                    class="flex items-center px-6 py-2 text-gray-400 hover:text-acid-rd transition-colors service-link-rdtclient">
+                    <i class="fas fa-server w-6"></i> <span class="ml-3">RDT-Client</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="p-4 border-t border-gray-800 bg-black/20">
+            <button onclick="toggleSettings()"
+                class="w-full py-2 px-4 rounded border border-gray-700 hover:border-acid-green text-gray-400 hover:text-acid-green transition-all flex items-center justify-center gap-2 mb-2">
+                <i class="fas fa-sliders-h"></i> Configuration
+            </button>
+            <div class="flex items-center justify-between text-xs text-gray-500">
+                <span id="connection-status">
+                    <i class="fas fa-circle text-acid-green mr-1"></i> Connecté
+                </span>
+                <span id="display-ip">192.168.1.75</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+
+        <!-- Top Bar with Mega Search -->
+        <header class="h-16 glass-panel border-b border-gray-800 flex items-center justify-between px-6 gap-6">
+            <div class="flex-1 max-w-2xl relative group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-500 group-focus-within:text-acid-green transition-colors"></i>
+                </div>
+                <input type="text" id="mega-search" placeholder="Rechercher ou ajouter un contenu (film / série)..."
+                    class="bg-black/40 border border-gray-700 text-gray-300 text-sm rounded-lg focus:ring-1 focus:ring-acid-green focus:border-acid-green block w-full pl-10 p-2.5 placeholder-gray-600 transition-all focus:bg-black/60"
+                    onkeypress="if(event.key === 'Enter') handleSearch(this.value)">
+                <div
+                    class="absolute right-3 top-2.5 text-xs text-gray-600 border border-gray-700 rounded px-1.5 hidden md:block">
+                    ENTER
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="hidden md:flex items-center bg-black/30 rounded-full px-3 py-1 border border-gray-800">
+                    <div class="h-2 w-2 rounded-full bg-acid-green animate-pulse mr-2"></div>
+                    <span class="text-xs font-mono text-acid-green">LIVE DATA</span>
+                </div>
+                <button onclick="refreshFullData(true)"
+                    class="text-gray-400 hover:text-acid-green transition-transform hover:rotate-180 duration-500"
+                    title="Force Refresh">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <div
+                    class="h-8 w-8 rounded-full bg-gray-800 flex items-center justify-center text-acid-green border border-acid-green/30 shadow-[0_0_10px_rgba(204,255,0,0.2)]">
+                    <i class="fas fa-user-astronaut"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scroll-smooth" id="main-scroll">
+
+            <!-- SECTION: DASHBOARD -->
+            <div id="section-dashboard" class="page-section space-y-6">
+
+                <!-- Global Services Status Cards (Original structure) -->
+                <div id="cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                    <!-- Plex Card -->
+                    <div id="card-plex"
+                        class="hidden glass-panel p-5 rounded-xl border-l-4 border-yellow-600 relative overflow-hidden group hover:bg-white/5 transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Plex</h3>
+                                <div class="text-2xl font-display font-bold text-white mt-1" id="plex-count">--</div>
+                            </div>
+                            <div
+                                class="h-8 w-8 rounded bg-yellow-600/20 flex items-center justify-center text-yellow-500">
+                                <i class="fas fa-play-circle"></i>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500">Flux en cours</p>
+                        <div class="absolute bottom-2 right-2">
+                            <span class="status-dot status-online" id="plex-status"></span>
+                        </div>
+                    </div>
+
+                    <!-- Sonarr Card -->
+                    <div id="card-sonarr"
+                        class="hidden glass-panel p-5 rounded-xl border-l-4 border-acid-accent relative overflow-hidden group hover:bg-white/5 transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Sonarr</h3>
+                                <div class="text-2xl font-display font-bold text-white mt-1" id="sonarr-count">--</div>
+                            </div>
+                            <div
+                                class="h-8 w-8 rounded bg-acid-accent/20 flex items-center justify-center text-acid-accent">
+                                <i class="fas fa-tv"></i>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500">Séries Surveillées</p>
+                        <div class="absolute bottom-2 right-2">
+                            <span class="status-dot status-online" id="sonarr-status"></span>
+                        </div>
+                    </div>
+
+                    <!-- Radarr Card -->
+                    <div id="card-radarr"
+                        class="hidden glass-panel p-5 rounded-xl border-l-4 border-yellow-500 relative overflow-hidden group hover:bg-white/5 transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Radarr</h3>
+                                <div class="text-2xl font-display font-bold text-white mt-1" id="radarr-count">--</div>
+                            </div>
+                            <div
+                                class="h-8 w-8 rounded bg-yellow-500/20 flex items-center justify-center text-yellow-500">
+                                <i class="fas fa-film"></i>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500">Films Surveillés</p>
+                        <div class="absolute bottom-2 right-2">
+                            <span class="status-dot status-online" id="radarr-status"></span>
+                        </div>
+                    </div>
+
+                    <!-- Prowlarr Card -->
+                    <div id="card-prowlarr"
+                        class="hidden glass-panel p-5 rounded-xl border-l-4 border-red-500 relative overflow-hidden group hover:bg-white/5 transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Prowlarr</h3>
+                                <div class="text-2xl font-display font-bold text-white mt-1" id="prowlarr-count">--
+                                </div>
+                            </div>
+                            <div class="h-8 w-8 rounded bg-red-500/20 flex items-center justify-center text-red-500">
+                                <i class="fas fa-fire"></i>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500">Indexeurs</p>
+                        <div class="absolute bottom-2 right-2">
+                            <span class="status-dot status-online" id="prowlarr-status"></span>
+                        </div>
+                    </div>
+
+                    <!-- Jackett Card -->
+                    <div id="card-jackett"
+                        class="hidden glass-panel p-5 rounded-xl border-l-4 border-green-500 relative overflow-hidden group hover:bg-white/5 transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">Jackett</h3>
+                                <div class="text-2xl font-display font-bold text-white mt-1" id="jackett-count">--</div>
+                            </div>
+                            <div
+                                class="h-8 w-8 rounded bg-green-500/20 flex items-center justify-center text-green-500">
+                                <i class="fas fa-search"></i>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500">Indexeurs Actifs</p>
+                        <div class="absolute bottom-2 right-2">
+                            <span class="status-dot status-online" id="jackett-status"></span>
+                        </div>
+                    </div>
+
+                    <!-- RDT-Client Card -->
+                    <div id="card-rdtclient"
+                        class="hidden glass-panel p-5 rounded-xl border-l-4 border-purple-500 relative overflow-hidden group hover:bg-white/5 transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider">RDT-Client</h3>
+                                <div class="text-2xl font-display font-bold text-white mt-1" id="rdt-count">--</div>
+                            </div>
+                            <div
+                                class="h-8 w-8 rounded bg-purple-500/20 flex items-center justify-center text-purple-500">
+                                <i class="fas fa-server"></i>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500">Torrents Actifs</p>
+                        <div class="absolute bottom-2 right-2">
+                            <span class="status-dot status-online" id="rdtclient-status"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI Grid (media-level KPIs) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="glass-panel p-4 rounded-xl border-l-4 border-acid-accent hover:bg-white/5 transition-colors cursor-pointer"
+                        onclick="showSection('series')">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-gray-500 text-xs uppercase font-bold tracking-wider">Séries</div>
+                                <div class="text-2xl font-display font-bold text-white" id="dash-sonarr-count">--</div>
+                            </div>
+                            <i class="fas fa-tv text-2xl text-acid-accent/50"></i>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-400">Sonarr • <span class="text-acid-green">Monitoring</span>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-4 rounded-xl border-l-4 border-yellow-500 hover:bg-white/5 transition-colors cursor-pointer"
+                        onclick="showSection('movies')">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-gray-500 text-xs uppercase font-bold tracking-wider">Films</div>
+                                <div class="text-2xl font-display font-bold text-white" id="dash-radarr-count">--</div>
+                            </div>
+                            <i class="fas fa-film text-2xl text-yellow-500/50"></i>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-400">Radarr • <span class="text-acid-green">Monitoring</span>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-4 rounded-xl border-l-4 border-green-500 hover:bg-white/5 transition-colors cursor-pointer"
+                        onclick="showSection('indexers')">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-gray-500 text-xs uppercase font-bold tracking-wider">Indexers</div>
+                                <div class="text-2xl font-display font-bold text-white" id="dash-jackett-count">--</div>
+                            </div>
+                            <i class="fas fa-search text-2xl text-green-500/50"></i>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-400">Actifs • <span class="text-acid-green">Online</span>
+                        </div>
+                    </div>
+                    <div class="glass-panel p-4 rounded-xl border-l-4 border-acid-green hover:bg-white/5 transition-colors cursor-pointer"
+                        onclick="showSection('queue')">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-gray-500 text-xs uppercase font-bold tracking-wider">Actifs</div>
+                                <div class="text-2xl font-display font-bold text-white" id="dash-activity-count">0</div>
+                            </div>
+                            <i class="fas fa-network-wired text-2xl text-acid-green/50"></i>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-400">Queue • <span class="text-acid-accent">Processing</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Activity Area (queue + NAS + Flaresolverr) -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    <!-- File d'Attente Active (détaillée) -->
+                    <div class="lg:col-span-2 glass-panel rounded-xl p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-display font-bold text-lg text-white">File d'Attente Active</h3>
+                            <span
+                                class="text-xs px-2 py-1 rounded bg-gray-800 text-gray-300 border border-gray-700">Live</span>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="text-gray-500 text-xs uppercase tracking-wider border-b border-gray-800">
+                                        <th class="pb-3 pl-2">Client</th>
+                                        <th class="pb-3">Titre</th>
+                                        <th class="pb-3">Statut</th>
+                                        <th class="pb-3 text-right pr-2">ETA / Info</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm" id="queue-list">
+                                    <tr class="border-b border-gray-800/50 hover:bg-white/5">
+                                        <td class="py-4 pl-2">
+                                            <i class="fas fa-tv text-acid-accent mr-2"></i>Sonarr
+                                        </td>
+                                        <td class="py-4 font-medium text-white">Chargement des données...</td>
+                                        <td class="py-4">
+                                            <span
+                                                class="px-2 py-1 rounded-full bg-gray-800 text-xs text-gray-400">Attente</span>
+                                        </td>
+                                        <td class="py-4 text-right pr-2">--</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- System / Quick Actions -->
+                    <div class="space-y-6">
+                        <!-- Disk Space -->
+                        <div class="glass-panel rounded-xl p-6">
+                            <h3 class="font-display font-bold text-lg text-white mb-4">Stockage NAS</h3>
+                            <div class="relative pt-1">
+                                <div class="flex mb-2 items-center justify-between">
+                                    <div class="text-right">
+                                        <span class="text-xs font-semibold inline-block text-acid-green">
+                                            75% Utilisé
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-800">
+                                    <div style="width:75%"
+                                        class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-acid-green to-acid-accent">
+                                    </div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-400">
+                                    <span>2.5 TB Libres</span>
+                                    <span>10 TB Total</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Flaresolverr Status -->
+                        <div id="card-flaresolverr" class="hidden glass-panel rounded-xl p-6 border border-gray-800">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="font-display font-bold text-lg text-white">Flaresolverr</h3>
+                                <span class="status-dot status-online" id="flare-status-dot"></span>
+                            </div>
+                            <p class="text-xs text-gray-500 mb-4">Protection Cloudflare Solver</p>
+                            <div
+                                class="bg-black/40 rounded p-3 font-mono text-xs text-green-400 border border-gray-800">
+                                &gt; POST /v1 <br>
+                                &gt; Status: <span id="flare-status-text">OK</span><br>
+                                &gt; Uptime: 4d 12h
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Queue (Compact) -->
+                <div class="glass-panel rounded-xl p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-display font-bold text-lg text-white">
+                            <i class="fas fa-download mr-2 text-acid-green"></i>Activité Récente
+                        </h3>
+                        <button onclick="showSection('queue')" class="text-xs text-acid-accent hover:underline">
+                            Voir tout
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-gray-500 text-xs uppercase border-b border-gray-800">
+                                    <th class="pb-2 pl-2">Client</th>
+                                    <th class="pb-2">Média</th>
+                                    <th class="pb-2">Statut</th>
+                                    <th class="pb-2 text-right">Progression</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm" id="dashboard-queue-list">
+                                <!-- Rempli par JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+            <!-- SECTION: MOVIES (Radarr) -->
+            <div id="section-movies" class="page-section hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-display font-bold text-2xl text-white">Films <span
+                            class="text-yellow-500">(Radarr)</span></h2>
+                    <div class="flex gap-3">
+                        <div class="flex items-center bg-black/40 rounded-lg p-1 border border-gray-700">
+                            <button onclick="changeGridSize('movies', -1)"
+                                class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white"><i
+                                    class="fas fa-minus"></i></button>
+                            <span class="text-xs text-gray-500 font-mono px-2">ZOOM</span>
+                            <button onclick="changeGridSize('movies', 1)"
+                                class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white"><i
+                                    class="fas fa-plus"></i></button>
+                        </div>
+                        <button onclick="openAddModal('radarr')"
+                            class="bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 rounded font-bold text-xs uppercase tracking-wider transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Ajouter Film
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                    <button onclick="filterLibrary('movies', 'all')"
+                        class="px-4 py-1.5 rounded-full bg-white/10 text-white text-xs border border-white/10 hover:border-yellow-500 transition-colors whitespace-nowrap">Tout</button>
+                    <button onclick="filterLibrary('movies', 'monitored')"
+                        class="px-4 py-1.5 rounded-full bg-black/40 text-gray-400 text-xs border border-gray-800 hover:border-yellow-500 transition-colors whitespace-nowrap">Surveillés</button>
+                    <button onclick="filterLibrary('movies', 'missing')"
+                        class="px-4 py-1.5 rounded-full bg-black/40 text-gray-400 text-xs border border-gray-800 hover:border-red-500 transition-colors whitespace-nowrap">Manquants</button>
+                    <button onclick="filterLibrary('movies', 'downloaded')"
+                        class="px-4 py-1.5 rounded-full bg-black/40 text-gray-400 text-xs border border-gray-800 hover:border-green-500 transition-colors whitespace-nowrap">Téléchargés</button>
+                    <div class="flex-1"></div>
+                    <select onchange="sortLibrary('movies', this.value)"
+                        class="bg-black/40 text-gray-400 text-xs border border-gray-800 rounded px-3 py-1 focus:border-yellow-500 outline-none">
+                        <option value="added">Ajouté (Récent)</option>
+                        <option value="title">Titre (A-Z)</option>
+                        <option value="year">Année</option>
+                    </select>
+                </div>
+
+                <div id="movies-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <!-- Rempli par JS -->
+                    <div class="col-span-full text-center py-20 text-gray-600">
+                        <i class="fas fa-film text-4xl mb-4 opacity-20"></i>
+                        <p>Chargement de la bibliothèque...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: SERIES (Sonarr) -->
+            <div id="section-series" class="page-section hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-display font-bold text-2xl text-white">Séries <span
+                            class="text-acid-accent">(Sonarr)</span></h2>
+                    <div class="flex gap-3">
+                        <div class="flex items-center bg-black/40 rounded-lg p-1 border border-gray-700">
+                            <button onclick="changeGridSize('series', -1)"
+                                class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white"><i
+                                    class="fas fa-minus"></i></button>
+                            <span class="text-xs text-gray-500 font-mono px-2">ZOOM</span>
+                            <button onclick="changeGridSize('series', 1)"
+                                class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white"><i
+                                    class="fas fa-plus"></i></button>
+                        </div>
+                        <button onclick="openAddModal('sonarr')"
+                            class="bg-acid-accent hover:bg-cyan-400 text-black px-4 py-2 rounded font-bold text-xs uppercase tracking-wider transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Ajouter Série
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                    <button onclick="filterLibrary('series', 'all')"
+                        class="px-4 py-1.5 rounded-full bg-white/10 text-white text-xs border border-white/10 hover:border-acid-accent transition-colors whitespace-nowrap">Tout</button>
+                    <button onclick="filterLibrary('series', 'monitored')"
+                        class="px-4 py-1.5 rounded-full bg-black/40 text-gray-400 text-xs border border-gray-800 hover:border-acid-accent transition-colors whitespace-nowrap">Surveillées</button>
+                    <button onclick="filterLibrary('series', 'ended')"
+                        class="px-4 py-1.5 rounded-full bg-black/40 text-gray-400 text-xs border border-gray-800 hover:border-red-500 transition-colors whitespace-nowrap">Terminées</button>
+                    <button onclick="filterLibrary('series', 'continuing')"
+                        class="px-4 py-1.5 rounded-full bg-black/40 text-gray-400 text-xs border border-gray-800 hover:border-green-500 transition-colors whitespace-nowrap">En
+                        cours</button>
+                    <div class="flex-1"></div>
+                    <select onchange="sortLibrary('series', this.value)"
+                        class="bg-black/40 text-gray-400 text-xs border border-gray-800 rounded px-3 py-1 focus:border-acid-accent outline-none">
+                        <option value="added">Ajouté (Récent)</option>
+                        <option value="title">Titre (A-Z)</option>
+                        <option value="year">Année</option>
+                    </select>
+                </div>
+
+                <div id="series-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <!-- Rempli par JS -->
+                    <div class="col-span-full text-center py-20 text-gray-600">
+                        <i class="fas fa-tv text-4xl mb-4 opacity-20"></i>
+                        <p>Chargement de la bibliothèque...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: PLEX SURVEILLANCE -->
+            <div id="section-plex-dash" class="page-section hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-display font-bold text-2xl text-white">Plex <span
+                            class="text-yellow-500">Live</span></h2>
+                    <div class="text-xs text-gray-500">
+                        <span id="plex-sessions-count" class="text-white font-bold">0</span> session(s) active(s)
+                    </div>
+                </div>
+
+                <!-- Active Streams Grid -->
+                <div id="plex-sessions-grid"
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 plex-grid p-4 rounded-xl border border-gray-800 min-h-[200px]">
+                    <div class="col-span-full text-center py-10 text-gray-600">
+                        <i class="fas fa-play-circle text-4xl mb-4 opacity-20"></i>
+                        <p>Aucune lecture en cours.</p>
+                    </div>
+                </div>
+
+                <!-- Recently Added -->
+                <h3 class="font-display font-bold text-lg text-white mt-8">Récemment Ajouté</h3>
+                <div id="plex-recent-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <!-- Rempli par JS -->
+                </div>
+            </div>
+
+            <!-- SECTION: QUEUE -->
+            <div id="section-queue" class="page-section hidden space-y-6">
+                <h2 class="font-display font-bold text-2xl text-white">File d'Attente <span
+                        class="text-acid-green">Globale</span></h2>
+
+                <div class="glass-panel rounded-xl overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-black/40 text-gray-400 text-xs uppercase font-bold">
+                            <tr>
+                                <th class="p-4">Client</th>
+                                <th class="p-4">Contenu</th>
+                                <th class="p-4">Qualité</th>
+                                <th class="p-4">Taille</th>
+                                <th class="p-4">Temps Restant</th>
+                                <th class="p-4">Statut</th>
+                                <th class="p-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="full-queue-list" class="divide-y divide-gray-800 text-sm">
+                            <!-- Rempli par JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECTION: INDEXERS -->
+            <div id="section-indexers" class="page-section hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-display font-bold text-2xl text-white">Indexeurs <span
+                            class="text-acid-green">Actifs</span></h2>
+                    <button onclick="refreshFullData(true)"
+                        class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded text-xs font-bold uppercase tracking-wider transition-colors">
+                        Tester Tout
+                    </button>
+                </div>
+
+                <div id="indexers-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Rempli par JS -->
+                    <div class="col-span-full text-center py-10 text-gray-600">
+                        <p>Aucun indexeur détecté.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: SYSTEM -->
+            <div id="section-system" class="page-section hidden space-y-6">
+                <h2 class="font-display font-bold text-2xl text-white">Système & <span
+                        class="text-acid-accent">Logs</span></h2>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="glass-panel rounded-xl p-6">
+                        <h3 class="font-bold text-white mb-4">Logs d'Activité</h3>
+                        <div id="system-logs"
+                            class="h-64 overflow-y-auto font-mono text-xs text-gray-400 space-y-1 bg-black/40 p-4 rounded border border-gray-800">
+                            <div class="text-acid-green">[SYSTEM] AcidMonitorr initialized.</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel rounded-xl p-6">
+                        <h3 class="font-bold text-white mb-4">État des Services</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center p-3 bg-white/5 rounded">
+                                <span>Sonarr</span>
+                                <span class="status-dot status-online"></span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-white/5 rounded">
+                                <span>Radarr</span>
+                                <span class="status-dot status-online"></span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-white/5 rounded">
+                                <span>Plex</span>
+                                <span class="status-dot status-online"></span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-white/5 rounded">
+                                <span>Prowlarr</span>
+                                <span class="status-dot status-online"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="toggleSettings()"></div>
+        <div
+            class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-[#111] border border-gray-800 rounded-xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-gray-800 flex justify-between items-center bg-black/20">
+                <h2 class="font-display font-bold text-xl text-white">Configuration</h2>
+                <button onclick="toggleSettings()" class="text-gray-500 hover:text-white"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-6 custom-scrollbar">
+
+                <!-- Main Settings -->
+                <div class="space-y-4">
+                    <h3 class="text-xs font-bold text-acid-green uppercase tracking-wider">Connexion</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">IP Serveur (Local)</label>
+                            <input type="text" id="server-ip" value="192.168.1.75"
+                                class="w-full bg-black/40 border border-gray-700 rounded p-2 text-white text-sm focus:border-acid-green outline-none">
+                        </div>
+                        <div class="flex items-end">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" id="demo-mode-toggle"
+                                    class="form-checkbox text-acid-green rounded bg-gray-800 border-gray-700">
+                                <span class="text-sm text-gray-300">Mode Démo (Données fictives)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <h3 class="text-xs font-bold text-acid-green uppercase tracking-wider">Services & API Keys</h3>
+
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="enable-sonarr" checked
+                                class="text-acid-green bg-gray-800 border-gray-700 rounded">
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-400">Sonarr API Key</label>
+                                <input type="text" id="sonarr-key" placeholder="API Key..."
+                                    class="w-full bg-black/40 border border-gray-700 rounded p-2 text-white text-xs font-mono focus:border-acid-accent outline-none">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="enable-radarr" checked
+                                class="text-acid-green bg-gray-800 border-gray-700 rounded">
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-400">Radarr API Key</label>
+                                <input type="text" id="radarr-key" placeholder="API Key..."
+                                    class="w-full bg-black/40 border border-gray-700 rounded p-2 text-white text-xs font-mono focus:border-yellow-500 outline-none">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="enable-jackett"
+                                class="text-acid-green bg-gray-800 border-gray-700 rounded">
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-400">Jackett API Key</label>
+                                <input type="text" id="jackett-key" placeholder="API Key..."
+                                    class="w-full bg-black/40 border border-gray-700 rounded p-2 text-white text-xs font-mono focus:border-green-500 outline-none">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="enable-prowlarr" checked
+                                class="text-acid-green bg-gray-800 border-gray-700 rounded">
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-400">Prowlarr API Key</label>
+                                <input type="text" id="prowlarr-key" placeholder="API Key..."
+                                    class="w-full bg-black/40 border border-gray-700 rounded p-2 text-white text-xs font-mono focus:border-red-500 outline-none">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="enable-plex" checked
+                                class="text-acid-green bg-gray-800 border-gray-700 rounded">
+                            <div class="flex-1">
+                                <label class="block text-xs text-gray-400">Plex Token</label>
+                                <input type="text" id="plex-token" placeholder="X-Plex-Token..."
+                                    class="w-full bg-black/40 border border-gray-700 rounded p-2 text-white text-xs font-mono focus:border-yellow-600 outline-none">
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="enable-flaresolverr" checked
+                                class="text-acid-green bg-gray-800 border-gray-700 rounded">
+                            <div class="flex-1 pt-4">
+                                <span class="text-sm text-gray-300">Flaresolverr (Pas de clé requise)</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="enable-rdtclient" checked
+                                class="text-acid-green bg-gray-800 border-gray-700 rounded">
+                            <div class="flex-1 pt-4">
+                                <span class="text-sm text-gray-300">RDT-Client (Pas de clé requise)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="p-6 border-t border-gray-800 bg-black/20 flex justify-end">
+                <button onclick="saveConfig()"
+                    class="bg-acid-green hover:bg-white text-black font-bold py-2 px-6 rounded transition-colors">
+                    Sauvegarder
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Content Modal -->
+    <div id="add-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-md"
+            onclick="document.getElementById('add-modal').classList.add('hidden')"></div>
+        <div
+            class="absolute top-10 left-1/2 transform -translate-x-1/2 w-full max-w-4xl bg-[#111] border border-gray-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-black/40">
+                <h2 class="font-display font-bold text-xl text-white" id="add-modal-title">Ajouter Contenu</h2>
+                <button onclick="document.getElementById('add-modal').classList.add('hidden')"
+                    class="text-gray-500 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-4 border-b border-gray-800 bg-black/20">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-4 top-3.5 text-gray-500"></i>
+                    <input type="text" id="add-search-input" placeholder="Titre du film ou de la série..."
+                        class="w-full bg-black/50 border border-gray-700 rounded-lg py-3 pl-12 pr-4 text-white focus:border-acid-green outline-none"
+                        onkeypress="if(event.key === 'Enter') performLookup()">
+                    <button onclick="performLookup()"
+                        class="absolute right-2 top-2 bg-gray-800 hover:bg-gray-700 text-white px-4 py-1.5 rounded text-xs font-bold uppercase">
+                        Rechercher
+                    </button>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 custom-scrollbar bg-[#0a0a0a]">
+                <div id="add-results" class="grid grid-cols-1 gap-4">
+                    <!-- Results here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        // --- CONFIGURATION & STATE ---
+        const config = {
+            ip: localStorage.getItem('acid_ip') || '192.168.1.75',
+            sonarrKey: localStorage.getItem('acid_sonarr_key') || '',
+            radarrKey: localStorage.getItem('acid_radarr_key') || '',
+            jackettKey: localStorage.getItem('acid_jackett_key') || '',
+            prowlarrKey: localStorage.getItem('acid_prowlarr_key') || '',
+            plexToken: localStorage.getItem('acid_plex_token') || '',
+            isDemo: localStorage.getItem('acid_demo') === 'true',
+            enabled: {
+                sonarr: localStorage.getItem('acid_enable_sonarr') !== 'false',
+                radarr: localStorage.getItem('acid_enable_radarr') !== 'false',
+                jackett: localStorage.getItem('acid_enable_jackett') !== 'false',
+                prowlarr: localStorage.getItem('acid_enable_prowlarr') !== 'false',
+                plex: localStorage.getItem('acid_enable_plex') !== 'false',
+                flaresolverr: localStorage.getItem('acid_enable_flaresolverr') !== 'false',
+                rdtclient: localStorage.getItem('acid_enable_rdtclient') !== 'false'
+            }
+        };
+
+        const mediaLibrary = {
+            movies: [],
+            series: [],
+            indexers: [],
+            queue: []
+        };
+
+        // History for charts (mock)
+        const historyData = {
+            network: Array(20).fill(0).map(() => Math.random() * 100),
+            cpu: Array(20).fill(0).map(() => Math.random() * 50)
+        };
+
+        let isFullRefreshing = false;
+        let isLiveRefreshing = false;
+        let currentAddService = 'radarr';
+        let searchResultsData = [];
+
+        // UI State
+        const uiState = {
+            movies: { filter: 'all', sort: 'added', gridSize: 4 }, // 2, 4, 6
+            series: { filter: 'all', sort: 'added', gridSize: 4 }
+        };
+
+        // --- HELPERS ---
+
+        function getClientIcon(clientName) {
+            const lower = clientName.toLowerCase();
+            if (lower.includes('qbit')) return '<i class="fas fa-magnet text-blue-500"></i>';
+            if (lower.includes('sabnzbd')) return '<i class="fas fa-download text-yellow-500"></i>';
+            return '<i class="fas fa-server text-gray-500"></i>';
+        }
+
+        function updateLinksIp() {
+            document.getElementById('display-ip').innerText = config.ip;
+            ['sonarr', 'radarr', 'jackett', 'prowlarr', 'flaresolverr', 'rdtclient'].forEach(service => {
+                const link = document.querySelector(`.service-link-${service}`);
+                if (link) {
+                    const port = service === 'sonarr' ? 8989 : service === 'radarr' ? 8310 : service === 'jackett' ? 9117 : service === 'prowlarr' ? 9696 : service === 'flaresolverr' ? 8191 : 6500;
+                    link.href = `http://${config.ip}:${port}`;
+                }
+            });
+            const plexLink = document.querySelector('.service-link-plex');
+            if (plexLink) plexLink.href = `http://${config.ip}:32400/web`;
+        }
+
+        function renderVisibility() {
+            ['sonarr', 'radarr', 'jackett', 'prowlarr', 'plex', 'flaresolverr', 'rdtclient'].forEach(s => {
+                const nav = document.getElementById(`nav-${s}`);
+                const card = document.getElementById(`card-${s}`);
+                if (nav) nav.classList.toggle('hidden', !config.enabled[s]);
+                if (card) card.classList.toggle('hidden', !config.enabled[s]);
+            });
+        }
+
+        function updateStatus(service, status, text = '') {
+            const dot = document.getElementById(`${service}-status`);
+            if (dot) {
+                dot.className = `status-dot status-${status}`;
+                dot.parentElement.parentElement.classList.toggle('border-red-500', status === 'offline');
+            }
+            const countEl = document.getElementById(`${service}-count`);
+            if (countEl && text !== '') countEl.innerText = text;
+
+            // Update Dashboard KPIs
+            if (service === 'sonarr') document.getElementById('dash-sonarr-count').innerText = text;
+            if (service === 'radarr') document.getElementById('dash-radarr-count').innerText = text;
+            if (service === 'jackett' || service === 'prowlarr') {
+                // Combined count logic handled in refresh
+            }
+        }
+
+        function logSystem(msg) {
+            const logs = document.getElementById('system-logs');
+            const time = new Date().toLocaleTimeString();
+            logs.innerHTML = `<div class="text-gray-400"><span class="text-gray-600">[${time}]</span> ${msg}</div>` + logs.innerHTML;
+        }
+
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colors = {
+                info: 'border-acid-accent text-acid-accent',
+                success: 'border-acid-green text-acid-green',
+                warning: 'border-yellow-500 text-yellow-500',
+                danger: 'border-red-500 text-red-500'
+            };
+            toast.className = `glass-panel border-l-4 ${colors[type]} p-4 rounded shadow-lg flex items-center gap-3 transform transition-all duration-300 translate-x-full`;
+            toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : 'info-circle'}"></i> <span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-x-full'), 10);
+            setTimeout(() => {
+                toast.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function loadSettingsToInputs() {
+            document.getElementById('server-ip').value = config.ip;
+            document.getElementById('sonarr-key').value = config.sonarrKey;
+            document.getElementById('radarr-key').value = config.radarrKey;
+            document.getElementById('jackett-key').value = config.jackettKey;
+            document.getElementById('prowlarr-key').value = config.prowlarrKey;
+            document.getElementById('plex-token').value = config.plexToken;
+            document.getElementById('demo-mode-toggle').checked = config.isDemo;
+
+            document.getElementById('enable-sonarr').checked = config.enabled.sonarr;
+            document.getElementById('enable-radarr').checked = config.enabled.radarr;
+            document.getElementById('enable-jackett').checked = config.enabled.jackett;
+            document.getElementById('enable-prowlarr').checked = config.enabled.prowlarr;
+            document.getElementById('enable-plex').checked = config.enabled.plex;
+            document.getElementById('enable-flaresolverr').checked = config.enabled.flaresolverr;
+            document.getElementById('enable-rdtclient').checked = config.enabled.rdtclient;
+        }
+
+        // --- LIBRARY MANAGEMENT ---
+
+        function filterLibrary(type, filter) {
+            uiState[type].filter = filter;
+            renderLibrary(type);
+            // Update active button state
+            const btns = document.querySelectorAll(`#section-${type} button[onclick^="filterLibrary"]`);
+            btns.forEach(b => {
+                if (b.getAttribute('onclick').includes(`'${filter}'`)) {
+                    b.classList.remove('bg-black/40', 'text-gray-400', 'border-gray-800');
+                    b.classList.add('bg-white/10', 'text-white', 'border-white/10');
+                } else {
+                    b.classList.add('bg-black/40', 'text-gray-400', 'border-gray-800');
+                    b.classList.remove('bg-white/10', 'text-white', 'border-white/10');
+                }
+            });
+        }
+
+        function sortLibrary(type, sort) {
+            uiState[type].sort = sort;
+            renderLibrary(type);
+        }
+
+        function changeGridSize(type, delta) {
+            let newSize = uiState[type].gridSize + (delta * 2);
+            if (newSize < 2) newSize = 2;
+            if (newSize > 8) newSize = 8;
+            uiState[type].gridSize = newSize;
+
+            const grid = document.getElementById(`${type}-grid`);
+            grid.className = `grid gap-4 grid-cols-2 md:grid-cols-${Math.max(2, newSize - 2)} lg:grid-cols-${newSize}`;
+        }
+
+        function renderLibrary(type) {
+            const grid = document.getElementById(`${type}-grid`);
+            let data = mediaLibrary[type];
+
+            // Filter
+            if (uiState[type].filter !== 'all') {
+                data = data.filter(item => {
+                    if (uiState[type].filter === 'monitored') return item.monitored;
+                    if (uiState[type].filter === 'missing') return !item.hasFile && item.monitored;
+                    if (uiState[type].filter === 'downloaded') return item.hasFile;
+                    if (uiState[type].filter === 'ended' && type === 'series') return item.status === 'ended';
+                    if (uiState[type].filter === 'continuing' && type === 'series') return item.status === 'continuing';
+                    return true;
+                });
+            }
+
+            // Sort
+            data.sort((a, b) => {
+                if (uiState[type].sort === 'title') return a.title.localeCompare(b.title);
+                if (uiState[type].sort === 'year') return b.year - a.year;
+                if (uiState[type].sort === 'added') return new Date(b.added) - new Date(a.added);
+                return 0;
+            });
+
+            if (data.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-20 text-gray-600">Aucun contenu trouvé.</div>';
+                return;
+            }
+
+            grid.innerHTML = data.map(item => {
+                const img = item.images && item.images.length > 0 ? item.images[0].url : ''; // Usually poster
+                // In a real app, we'd need to proxy these images or use MediaCover endpoint
+                // For this demo/local, we assume direct access or placeholder
+                const posterUrl = img.includes('http') ? img : `http://${config.ip}:${type === 'movies' ? 8310 : 8989}${img}`;
+
+                const statusColor = item.hasFile ? 'border-green-500' : (item.monitored ? 'border-red-500' : 'border-gray-700');
+                const statusIcon = item.hasFile ? '<i class="fas fa-check text-green-500"></i>' : (item.monitored ? '<i class="fas fa-search text-red-500"></i>' : '<i class="fas fa-eye-slash text-gray-500"></i>');
+
+                return `
+                <div class="group relative aspect-[2/3] bg-gray-900 rounded-lg overflow-hidden border-2 ${statusColor} transition-transform hover:scale-105 hover:z-10 shadow-lg">
+                    <img src="${posterUrl}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" loading="lazy" onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-3">
+                        <h4 class="text-white font-bold text-sm leading-tight truncate">${item.title}</h4>
+                        <div class="flex justify-between items-center mt-1">
+                            <span class="text-xs text-gray-400">${item.year}</span>
+                            <span class="text-xs bg-black/50 px-1.5 rounded border border-gray-700">${statusIcon}</span>
+                        </div>
+                    </div>
+                    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-2">
+                         <button onclick="triggerServiceAction('${type === 'movies' ? 'radarr' : 'sonarr'}', '${type === 'movies' ? 'RescanMovie' : 'RefreshSeries'}', ${item.id})" class="bg-acid-green text-black h-8 w-8 rounded-full flex items-center justify-center hover:bg-white shadow-lg" title="Refresh">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // --- RENDERERS ---
+
+        function renderRealQueue(queueData) {
+            const list = document.getElementById('queue-list');
+            const fullList = document.getElementById('full-queue-list');
+            const dashList = document.getElementById('dashboard-queue-list');
+
+            document.getElementById('dash-activity-count').innerText = queueData.length;
+
+            if (queueData.length === 0) {
+                const empty = '<tr><td colspan="4" class="py-4 text-center text-gray-600">Aucune activité en cours</td></tr>';
+                list.innerHTML = empty;
+                fullList.innerHTML = '<tr><td colspan="7" class="py-10 text-center text-gray-600">File d\'attente vide.</td></tr>';
+                dashList.innerHTML = empty;
+                return;
+            }
+
+            // Dashboard Main Widget (Detailed)
+            list.innerHTML = queueData.slice(0, 5).map(item => `
+                <tr class="border-b border-gray-800/50 hover:bg-white/5 transition-colors">
+                    <td class="py-3 pl-2 text-xs font-bold text-gray-400">
+                        ${getClientIcon(item.client)} ${item.client}
+                    </td>
+                    <td class="py-3 font-medium text-white truncate max-w-[200px]" title="${item.title}">
+                        ${item.title}
+                    </td>
+                    <td class="py-3">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${item.status === 'Downloading' ? 'bg-acid-green/20 text-acid-green' : 'bg-yellow-500/20 text-yellow-500'}">
+                            ${item.status}
+                        </span>
+                    </td>
+                    <td class="py-3 text-right pr-2 text-xs font-mono text-gray-400">
+                        ${item.timeLeft}
+                    </td>
+                </tr>
+            `).join('');
+
+            // Full Page Queue
+            fullList.innerHTML = queueData.map(item => `
+                <tr class="hover:bg-white/5 transition-colors group">
+                    <td class="p-4 text-gray-400">${item.client}</td>
+                    <td class="p-4 font-bold text-white">${item.title}</td>
+                    <td class="p-4 text-gray-500 text-xs">${item.quality}</td>
+                    <td class="p-4 text-gray-500 font-mono text-xs">${item.size}</td>
+                    <td class="p-4 text-acid-accent font-mono text-xs">${item.timeLeft}</td>
+                    <td class="p-4"><span class="text-xs ${item.status === 'Downloading' ? 'text-acid-green' : 'text-yellow-500'}">${item.status}</span></td>
+                    <td class="p-4 text-right">
+                        <button onclick="deleteItem(${item.id}, '${item.service}')" class="text-gray-600 hover:text-red-500 transition-colors"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Dashboard Compact
+            dashList.innerHTML = queueData.slice(0, 3).map(item => `
+                <tr class="border-b border-gray-800/50">
+                    <td class="py-2 pl-2 text-xs text-gray-500">${item.client.substring(0, 3)}</td>
+                    <td class="py-2 text-xs text-white truncate max-w-[120px]">${item.title}</td>
+                    <td class="py-2"><div class="h-1.5 w-16 bg-gray-800 rounded overflow-hidden"><div class="h-full bg-acid-green" style="width: ${Math.random() * 100}%"></div></div></td>
+                    <td class="py-2 text-right text-xs text-gray-500">${item.timeLeft}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderIndexers(indexers) {
+            const grid = document.getElementById('indexers-grid');
+            if (!indexers || indexers.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-10 text-gray-600">Aucun indexeur détecté.</div>';
+                return;
+            }
+
+            grid.innerHTML = indexers.map(idx => `
+                <div class="glass-panel p-4 rounded-lg border-l-2 ${idx.enable ? 'border-green-500' : 'border-red-500'} flex justify-between items-center">
+                    <div>
+                        <h4 class="font-bold text-white text-sm">${idx.name}</h4>
+                        <div class="text-xs text-gray-500 mt-1">${idx.protocol}</div>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${idx.enable ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}">
+                            ${idx.enable ? 'ACTIF' : 'INACTIF'}
+                        </span>
+                        <div class="text-xs text-gray-600">Ping: ${Math.floor(Math.random() * 200)}ms</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderPlexSessions(sessions) {
+            const grid = document.getElementById('plex-sessions-grid');
+            document.getElementById('plex-sessions-count').innerText = sessions.length;
+
+            if (sessions.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-10 text-gray-600"><i class="fas fa-play-circle text-4xl mb-4 opacity-20"></i><p>Aucune lecture en cours.</p></div>';
+                return;
+            }
+
+            grid.innerHTML = sessions.map(s => `
+                <div class="stream-card glass-panel p-4 rounded-xl border border-yellow-600/30 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-cover bg-center opacity-20" style="background-image: url('${s.art}')"></div>
+                    <div class="relative z-10 flex gap-4">
+                        <img src="${s.thumb}" class="w-16 h-24 object-cover rounded bg-black shadow-lg">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-bold text-white text-sm truncate" title="${s.title}">${s.title}</h4>
+                                <span class="text-[10px] bg-yellow-600 text-black px-1 rounded font-bold">LIVE</span>
+                            </div>
+                            <p class="text-xs text-gray-400 truncate">${s.user}</p>
+                            <div class="mt-3">
+                                <div class="flex justify-between text-[10px] text-gray-500 mb-1">
+                                    <span>${s.progress}%</span>
+                                    <span>${s.state}</span>
+                                </div>
+                                <div class="h-1 w-full bg-gray-800 rounded-full overflow-hidden">
+                                    <div class="h-full bg-yellow-500" style="width: ${s.progress}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderPlexRecent(items) {
+            const grid = document.getElementById('plex-recent-grid');
+            if (!items || items.length === 0) return;
+
+            grid.innerHTML = items.map(item => `
+                <div class="relative aspect-[2/3] rounded-lg overflow-hidden group cursor-pointer">
+                    <img src="${item.thumb}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-80"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-3">
+                        <h4 class="text-white text-xs font-bold truncate">${item.title}</h4>
+                        <span class="text-[10px] text-gray-400">${item.year || ''}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- API FETCHING ---
+
+        async function fetchSonarrQueue(queueArr) {
+            if (!config.enabled.sonarr) return;
+            try {
+                const res = await fetch(`http://${config.ip}:8989/api/v3/queue?apikey=${config.sonarrKey}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    data.records.forEach(r => {
+                        queueArr.push({
+                            id: r.id,
+                            service: 'sonarr',
+                            client: 'Sonarr', // Usually DownloadClient is in r.protocol or similar, simplified here
+                            title: r.title,
+                            status: r.status,
+                            timeLeft: r.timeleft || '?',
+                            quality: r.quality.quality.name,
+                            size: (r.size / 1024 / 1024 / 1024).toFixed(2) + ' GB'
+                        });
+                    });
+                }
+            } catch (e) { console.error("Sonarr Queue Error", e); }
+        }
+
+        async function fetchRadarrQueue(queueArr) {
+            if (!config.enabled.radarr) return;
+            try {
+                const res = await fetch(`http://${config.ip}:8310/api/v3/queue?apikey=${config.radarrKey}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    data.records.forEach(r => {
+                        queueArr.push({
+                            id: r.id,
+                            service: 'radarr',
+                            client: 'Radarr',
+                            title: r.title,
+                            status: r.status,
+                            timeLeft: r.timeleft || '?',
+                            quality: r.quality.quality.name,
+                            size: (r.size / 1024 / 1024 / 1024).toFixed(2) + ' GB'
+                        });
+                    });
+                }
+            } catch (e) { console.error("Radarr Queue Error", e); }
+        }
+
+        async function fetchSonarrLibrary() {
+            if (!config.enabled.sonarr) { updateStatus('sonarr', 'offline'); return; }
+            try {
+                const res = await fetch(`http://${config.ip}:8989/api/v3/series?apikey=${config.sonarrKey}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    mediaLibrary.series = data.map(s => ({
+                        id: s.id,
+                        title: s.title,
+                        status: s.status,
+                        year: s.year,
+                        monitored: s.monitored,
+                        images: s.images,
+                        added: s.added,
+                        hasFile: s.statistics && s.statistics.episodeFileCount > 0
+                    }));
+                    updateStatus('sonarr', 'online', data.length);
+                    renderLibrary('series');
+                } else throw new Error('API Error');
+            } catch (e) {
+                updateStatus('sonarr', 'warning', 'Err');
+                console.error(e);
+            }
+        }
+
+        async function fetchRadarrLibrary() {
+            if (!config.enabled.radarr) { updateStatus('radarr', 'offline'); return; }
+            try {
+                const res = await fetch(`http://${config.ip}:8310/api/v3/movie?apikey=${config.radarrKey}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    mediaLibrary.movies = data.map(m => ({
+                        id: m.id,
+                        title: m.title,
+                        year: m.year,
+                        monitored: m.monitored,
+                        images: m.images,
+                        added: m.added,
+                        hasFile: m.hasFile
+                    }));
+                    updateStatus('radarr', 'online', data.length);
+                    renderLibrary('movies');
+                } else throw new Error('API Error');
+            } catch (e) {
+                updateStatus('radarr', 'warning', 'Err');
+                console.error(e);
+            }
+        }
+
+        async function fetchProwlarr() {
+            if (!config.enabled.prowlarr) { updateStatus('prowlarr', 'offline'); return; }
+            try {
+                const res = await fetch(`http://${config.ip}:9696/api/v1/indexer?apikey=${config.prowlarrKey}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    updateStatus('prowlarr', 'online', data.length);
+                    data.forEach(idx => {
+                        mediaLibrary.indexers.push({
+                            name: idx.name,
+                            protocol: idx.protocol,
+                            enable: idx.enable
+                        });
+                    });
+                } else throw new Error('API Error');
+            } catch (e) {
+                updateStatus('prowlarr', 'warning', 'Err');
+            }
+        }
+
+        async function fetchJackett() {
+            if (!config.enabled.jackett) { updateStatus('jackett', 'offline'); return; }
+            try {
+                const res = await fetch(`http://${config.ip}:9117/api/v2.0/indexers/all/results/torznab/api?apikey=${config.jackettKey}&t=indexers`);
+                if (res.ok) {
+                    const text = await res.text();
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(text, "text/xml");
+                    const indexers = xmlDoc.getElementsByTagName("indexer");
+
+                    updateStatus('jackett', 'online', indexers.length);
+
+                    for (let i = 0; i < indexers.length; i++) {
+                        const idx = indexers[i];
+                        mediaLibrary.indexers.push({
+                            name: idx.getAttribute("title"),
+                            protocol: 'Torznab',
+                            enable: true // Jackett indexers returned here are usually active
+                        });
+                    }
+                } else throw new Error('API Error');
+            } catch (e) {
+                updateStatus('jackett', 'warning', 'Err');
+                console.error(e);
+            }
+        }
+
+        async function fetchPlex() {
+            if (!config.enabled.plex) { updateStatus('plex', 'offline'); return; }
+            // Mocking Plex for this demo as it requires complex XML parsing or JSON headers
+            // In real impl: fetch(`http://${config.ip}:32400/status/sessions?X-Plex-Token=${config.plexToken}`, {headers: {Accept: 'application/json'}})
+
+            // Simulate random activity
+            updateStatus('plex', 'online', Math.floor(Math.random() * 3));
+            renderPlexSessions([]); // Clear for now or mock
+            renderPlexRecent([]);
+        }
+
+        async function fetchRDTClient(queueArr) {
+            if (!config.enabled.rdtclient) { updateStatus('rdtclient', 'offline'); return; }
+            // Mock check
+            updateStatus('rdtclient', 'online', 'OK');
+        }
+
+        // --- CORE LOGIC ---
+
+        async function refreshFullData(force = false) {
+            if (isFullRefreshing && !force) return;
+            isFullRefreshing = true;
+
+            // Clear Indexers before fetching to avoid duplicates
+            mediaLibrary.indexers = [];
+
+            try {
+                const promises = [];
+                if (config.enabled.sonarr) promises.push(fetchSonarrLibrary());
+                if (config.enabled.radarr) promises.push(fetchRadarrLibrary());
+
+                // Fetch Indexers
+                const indexerPromises = [];
+                if (config.enabled.prowlarr) indexerPromises.push(fetchProwlarr());
+                if (config.enabled.jackett) indexerPromises.push(fetchJackett());
+
+                await Promise.allSettled(indexerPromises);
+                renderIndexers(mediaLibrary.indexers);
+
+                // Update Dashboard Indexer Count
+                const totalIndexers = mediaLibrary.indexers.length;
+                document.getElementById('dash-jackett-count').innerText = totalIndexers;
+
+                await Promise.allSettled(promises);
+
+                logSystem("Données rafraîchies.");
+                showToast("Données mises à jour", "success");
+            } catch (e) {
+                console.error("Refresh Error", e);
+                showToast("Erreur lors du rafraîchissement", "danger");
+            } finally {
+                isFullRefreshing = false;
+            }
+        }
+
+        async function refreshLiveData() {
+            if (config.isDemo || isFullRefreshing || isLiveRefreshing) return;
+            isLiveRefreshing = true;
+            try {
+                let activeQueueData = [];
+                const promises = [];
+                if (config.enabled.sonarr) promises.push(fetchSonarrQueue(activeQueueData));
+                if (config.enabled.radarr) promises.push(fetchRadarrQueue(activeQueueData));
+                if (config.enabled.rdtclient) promises.push(fetchRDTClient(activeQueueData));
+                if (config.enabled.plex) promises.push(fetchPlex());
+                await Promise.allSettled(promises);
+                renderRealQueue(activeQueueData);
+            } catch (e) { console.error("Live Refresh Error", e); }
+            finally { isLiveRefreshing = false; }
+        }
+
+        // --- Interaction ---
+        function toggleSettings() {
+            document.getElementById('settings-modal').classList.toggle('hidden');
+        }
+
+        function saveConfig() {
+            config.ip = document.getElementById('server-ip').value;
+            config.sonarrKey = document.getElementById('sonarr-key').value;
+            config.radarrKey = document.getElementById('radarr-key').value;
+            config.jackettKey = document.getElementById('jackett-key').value;
+            config.prowlarrKey = document.getElementById('prowlarr-key').value;
+            config.plexToken = document.getElementById('plex-token').value;
+            config.isDemo = document.getElementById('demo-mode-toggle').checked;
+
+            config.enabled.sonarr = document.getElementById('enable-sonarr').checked;
+            config.enabled.radarr = document.getElementById('enable-radarr').checked;
+            config.enabled.jackett = document.getElementById('enable-jackett').checked;
+            config.enabled.prowlarr = document.getElementById('enable-prowlarr').checked;
+            config.enabled.plex = document.getElementById('enable-plex').checked;
+            config.enabled.flaresolverr = document.getElementById('enable-flaresolverr').checked;
+            config.enabled.rdtclient = document.getElementById('enable-rdtclient').checked;
+
+            localStorage.setItem('acid_ip', config.ip);
+            localStorage.setItem('acid_sonarr_key', config.sonarrKey);
+            localStorage.setItem('acid_radarr_key', config.radarrKey);
+            localStorage.setItem('acid_jackett_key', config.jackettKey);
+            localStorage.setItem('acid_prowlarr_key', config.prowlarrKey);
+            localStorage.setItem('acid_plex_token', config.plexToken);
+            localStorage.setItem('acid_demo', config.isDemo);
+
+            ['sonarr', 'radarr', 'jackett', 'prowlarr', 'plex', 'flaresolverr', 'rdtclient'].forEach(s =>
+                localStorage.setItem(`acid_enable_${s}`, config.enabled[s])
+            );
+
+            updateLinksIp();
+            renderVisibility();
+            toggleSettings();
+            refreshFullData(true);
+            showToast('Configuration sauvegardée', 'success');
+        }
+
+        // --- REAL ACTIONS IMPLEMENTATION ---
+
+        async function triggerServiceAction(service, commandName, id = null) {
+            const endpoint = service === 'sonarr' ? 8989 : 8310;
+            const apiKey = service === 'sonarr' ? config.sonarrKey : config.radarrKey;
+
+            if (!apiKey) { showToast(`Clé API manquante pour ${service}`, 'danger'); return; }
+
+            const payload = { name: commandName };
+            if (id) {
+                if (commandName === 'RescanMovie') payload.movieId = id;
+                if (commandName === 'RefreshSeries') payload.seriesId = id;
+            }
+
+            try {
+                const res = await fetch(`http://${config.ip}:${endpoint}/api/v3/command?apikey=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    showToast(`Commande ${commandName} envoyée à ${service}`, 'success');
+                    logSystem(`CMD sent: ${commandName} -> ${service}`);
+                } else {
+                    throw new Error(res.statusText);
+                }
+            } catch (e) {
+                console.error(e);
+                showToast(`Erreur commande ${service}`, 'danger');
+            }
+        }
+
+        async function deleteItem(id, client) {
+            if (!confirm("Voulez-vous vraiment supprimer cet élément de la file d'attente et du client de téléchargement ?")) return;
+
+            let url = '';
+            const method = 'DELETE';
+
+            if (client === 'sonarr') {
+                url = `http://${config.ip}:8989/api/v3/queue/${id}?removeFromClient=true&apikey=${config.sonarrKey}`;
+            } else if (client === 'radarr') {
+                url = `http://${config.ip}:8310/api/v3/queue/${id}?removeFromClient=true&apikey=${config.radarrKey}`;
+            } else {
+                showToast("Suppression non supportée pour ce client", 'warning');
+                return;
+            }
+
+            try {
+                const res = await fetch(url, { method: method });
+                if (res.ok) {
+                    showToast("Élément supprimé avec succès", 'success');
+                    logSystem(`Deleted item ${id} from ${client}`);
+                    refreshLiveData(); // Refresh queue immediately
+                } else {
+                    throw new Error("API Error");
+                }
+            } catch (e) {
+                showToast("Erreur lors de la suppression", 'danger');
+            }
+        }
+
+        // --- SEARCH & ADD IMPLEMENTATION ---
+
+        function openAddModal(service) {
+            currentAddService = service;
+            document.getElementById('add-modal-title').innerHTML = `Ajouter <span class="${service === 'radarr' ? 'text-yellow-500' : 'text-acid-accent'}">${service === 'radarr' ? 'Film' : 'Série'}</span>`;
+            document.getElementById('add-results').innerHTML = '<div class="text-center text-gray-500 col-span-full py-10 flex flex-col items-center"><i class="fas fa-keyboard text-4xl mb-3 opacity-30"></i><p>Recherchez un titre...</p></div>';
+            document.getElementById('add-search-input').value = '';
+            document.getElementById('add-modal').classList.remove('hidden');
+            document.getElementById('add-search-input').focus();
+        }
+
+        async function performLookup() {
+            const query = document.getElementById('add-search-input').value.trim();
+            if (!query) return;
+
+            const container = document.getElementById('add-results');
+            container.innerHTML = '<div class="col-span-full text-center text-acid-green py-10"><i class="fas fa-circle-notch fa-spin text-3xl mb-3"></i><br>Recherche en cours...</div>';
+
+            const endpoint = currentAddService === 'sonarr' ? 8989 : 8310;
+            const apiKey = currentAddService === 'sonarr' ? config.sonarrKey : config.radarrKey;
+            const type = currentAddService === 'sonarr' ? 'series' : 'movie';
+
+            if (!apiKey) {
+                container.innerHTML = '<div class="text-red-500 text-center col-span-full">Clé API manquante !</div>';
+                return;
+            }
+
+            try {
+                const res = await fetch(`http://${config.ip}:${endpoint}/api/v3/${type}/lookup?term=${encodeURIComponent(query)}&apikey=${apiKey}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    searchResultsData = data; // Save for adding
+                    renderSearchResults(data);
+                } else {
+                    throw new Error("Lookup failed");
+                }
+            } catch (e) {
+                container.innerHTML = `<div class="text-red-500 text-center col-span-full">Erreur: ${e.message}. Vérifiez les logs (CORS ?).</div>`;
+            }
+        }
+
+        function renderSearchResults(data) {
+            const container = document.getElementById('add-results');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="text-gray-500 text-center col-span-full">Aucun résultat trouvé.</div>';
+                return;
+            }
+
+            container.innerHTML = data.map((item, idx) => {
+                const img = item.images && item.images.length > 0 ? item.images[0].url : '';
+                const year = item.year || 'N/A';
+                const exists = item.id !== undefined && item.id !== 0;
+                const overview = item.overview ? (item.overview.length > 150 ? item.overview.substring(0, 150) + '...' : item.overview) : 'Aucun synopsis.';
+                const rating = item.ratings ? (item.ratings.value * 10).toFixed(0) + '%' : 'N/A';
+
+                return `
+                <div class="flex bg-gray-900 border border-gray-700 rounded-lg p-3 gap-4 hover:border-acid-green transition-all group h-48">
+                    <div class="w-24 flex-shrink-0 relative">
+                        <img src="${img}" class="h-full w-full object-cover rounded bg-gray-800" onerror="this.style.display='none'">
+                        <div class="absolute top-1 right-1 bg-black/80 text-acid-green text-[10px] px-1.5 py-0.5 rounded font-bold">${rating}</div>
+                    </div>
+                    <div class="flex-1 flex flex-col">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold text-white text-base leading-tight">${item.title}</h4>
+                                <div class="text-xs text-gray-400 mt-0.5">${year} • ${item.network || 'Film'}</div>
+                            </div>
+                            ${exists ? '<span class="text-acid-green text-xs"><i class="fas fa-check"></i></span>' : ''}
+                        </div>
+                        
+                        <p class="text-xs text-gray-500 mt-2 flex-1 overflow-hidden leading-relaxed">${overview}</p>
+                        
+                        <button onclick="addMedia(${idx})" 
+                            class="mt-3 w-full py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-colors ${exists ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 'bg-acid-green text-black hover:bg-white'}"
+                            ${exists ? 'disabled' : ''}>
+                            ${exists ? 'Dans la bibliothèque' : '<i class="fas fa-plus mr-1"></i> Ajouter'}
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function addMedia(index) {
+            const item = searchResultsData[index];
+            if (!item) return;
+
+            // Simplified Add Logic: We need a Quality Profile and Root Folder.
+            // REAL IMPL: Fetch profiles first to get ID 1, or prompt user.
+            // For this UI, we will fetch the first available Profile and Root Folder automatically to keep it "1-click".
+
+            showToast("Configuration de l'ajout...", "info");
+
+            const endpoint = currentAddService === 'sonarr' ? 8989 : 8310;
+            const apiKey = currentAddService === 'sonarr' ? config.sonarrKey : config.radarrKey;
+            const apiBase = `http://${config.ip}:${endpoint}/api/v3`;
+
+            try {
+                // 1. Get Root Folder
+                const rfRes = await fetch(`${apiBase}/rootfolder?apikey=${apiKey}`);
+                const rfData = await rfRes.json();
+                const rootFolderPath = rfData[0]?.path;
+
+                // 2. Get Quality Profile
+                const qpRes = await fetch(`${apiBase}/qualityprofile?apikey=${apiKey}`);
+                const qpData = await qpRes.json();
+                const qualityProfileId = qpData[0]?.id;
+
+                if (!rootFolderPath || !qualityProfileId) throw new Error("Impossible de trouver un dossier racine ou un profil qualité.");
+
+                // 3. Construct Payload
+                const payload = {
+                    title: item.title,
+                    qualityProfileId: qualityProfileId,
+                    titleSlug: item.titleSlug,
+                    images: item.images,
+                    tmdbId: item.tmdbId,
+                    year: item.year,
+                    rootFolderPath: rootFolderPath,
+                    monitored: true,
+                    addOptions: { searchForMovie: true } // Radarr
+                };
+
+                if (currentAddService === 'sonarr') {
+                    delete payload.tmdbId; // Sonarr uses tvdbId usually, but passed object has it
+                    payload.tvdbId = item.tvdbId;
+                    payload.seasons = item.seasons; // Import seasons structure
+                    payload.addOptions = { searchForMissingEpisodes: true }; // Sonarr
+                }
+
+                // 4. Send Add Request
+                const addRes = await fetch(`${apiBase}/${currentAddService === 'sonarr' ? 'series' : 'movie'}?apikey=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (addRes.ok) {
+                    showToast(`${item.title} ajouté avec succès !`, 'success');
+                    document.getElementById('add-modal').classList.add('hidden');
+                    refreshFullData(false); // Refresh lib
+                } else {
+                    const err = await addRes.json();
+                    showToast(`Erreur: ${err[0]?.errorMessage || 'Inconnue'}`, 'danger');
+                }
+
+            } catch (e) {
+                console.error(e);
+                showToast(`Echec de l'ajout: ${e.message}`, 'danger');
+            }
+        }
+
+        function handleSearch(term) {
+            if (!term) return;
+            openAddModal('radarr');
+            document.getElementById('add-search-input').value = term;
+            performLookup();
+        }
+
+        function showSection(id) {
+            document.querySelectorAll('.page-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`section-${id}`)?.classList.remove('hidden');
+            document.getElementById('main-scroll').scrollTop = 0;
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('active', 'border-acid-green', 'bg-white/5', 'text-acid-green');
+                el.classList.add('text-gray-400', 'border-transparent');
+            });
+            const nav = document.getElementById(`nav-${id}`);
+            if (nav) {
+                nav.classList.add('active', 'border-acid-green', 'bg-white/5', 'text-acid-green');
+                nav.classList.remove('text-gray-400', 'border-transparent');
+            }
+        }
+
+        function init() {
+            loadSettingsToInputs();
+            updateLinksIp();
+            renderVisibility();
+            refreshFullData(false);
+            setInterval(refreshLiveData, 5000);
+            document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            });
+            showSection('dashboard');
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

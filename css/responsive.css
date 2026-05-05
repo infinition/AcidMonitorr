@@ -1,0 +1,9 @@
+/* Responsive CSS */
+
+/* Mobile specific overrides if needed beyond Tailwind */
+@media (max-width: 768px) {
+    .glass-panel {
+        backdrop-filter: blur(8px);
+        /* Less blur on mobile for performance */
+    }
+}
