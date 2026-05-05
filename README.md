@@ -45,3 +45,6 @@ services:
 
 ---
 *Stay Acid. @infinition*
+
+## License
+MIT License. See [LICENSE](LICENSE) for details.
