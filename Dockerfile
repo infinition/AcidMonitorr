@@ -5,6 +5,10 @@ FROM rust:slim-bookworm AS builder
 RUN apt-get update && apt-get install -y \
     pkg-config \
     libssl-dev \
+    libgtk-3-dev \
+    libwebkit2gtk-4.0-dev \
+    libayatana-appindicator3-dev \
+    librsvg2-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

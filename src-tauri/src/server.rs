@@ -2,7 +2,7 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
-    routing::{get, post},
+    routing::post,
     Json, Router,
 };
 use std::net::SocketAddr;
@@ -116,7 +116,7 @@ async fn handle_api(
         "fetch_flaresolverr_status" => crate::api::flaresolverr::fetch_flaresolverr_status_logic(&state).await,
         "proxy_image" => {
              let url = payload["url"].as_str().unwrap_or("").to_string();
-             crate::api::proxy_image(url).await
+             crate::api::proxy_image(url).await.map(Value::String)
         }
         _ => Err(format!("Unknown command: {}", cmd)),
     };

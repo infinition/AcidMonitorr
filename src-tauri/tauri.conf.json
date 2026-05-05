@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicknisi/tauri-v2/main/.schemas/desktop-schema.json",
   "productName": "AcidMonitorr",
-  "version": "3.0.0",
+  "version": "1.0.0",
   "identifier": "com.acidmonitorr.app",
   "build": {
     "frontendDist": "../src",
@@ -12,7 +12,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "AcidMonitorr | Command Center v3.0",
+        "title": "AcidMonitorr | Command Center v1.0",
         "width": 1400,
         "height": 900,
         "minWidth": 900,

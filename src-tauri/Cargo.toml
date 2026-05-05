@@ -1,6 +1,6 @@
 [package]
 name = "acidmonitorr"
-version = "3.0.0"
+version = "1.0.0"
 description = "AcidMonitorr - Media Command Center"
 authors = ["AcidMonitorr"]
 edition = "2021"
