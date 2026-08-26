@@ -1,4 +1,6 @@
-<img width="120" height="120" alt="AcidMonitorr" src="https://github.com/user-attachments/assets/28ef22f6-0981-4047-aaf8-b56e571a83da" />
+<p align="center">
+  <img src=".github/AcidMonitorr.png" alt="AcidMonitorr icon" width="120" height="120" />
+</p>
 
 # AcidMonitorr
 
